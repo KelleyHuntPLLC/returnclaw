@@ -1,0 +1,31 @@
+{
+  "name": "returnclaw",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "db:migrate": "pnpm --filter @returnclaw/policy-engine db:migrate",
+    "db:seed": "pnpm --filter @returnclaw/policy-engine db:seed",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  },
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/returnclaw/returnclaw.git"
+  },
+  "homepage": "https://returnclaw.com"
+}

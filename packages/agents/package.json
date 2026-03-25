@@ -1,0 +1,32 @@
+{
+  "name": "@returnclaw/agents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@returnclaw/core": "workspace:*",
+    "openai": "^4.77.0",
+    "pino": "^9.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "@types/node": "^22.10.5"
+  },
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)",
+  "license": "SEE LICENSE IN LICENSE.md"
+}

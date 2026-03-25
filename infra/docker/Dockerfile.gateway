@@ -1,0 +1,77 @@
+# ── Stage 1: Install dependencies ────────────────────────────────────────────
+FROM node:22-alpine AS deps
+
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
+
+WORKDIR /app
+
+# Copy workspace root manifests
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY tsconfig.base.json ./
+
+# Copy package manifests for all packages the gateway depends on
+COPY packages/core/package.json packages/core/
+COPY packages/gateway/package.json packages/gateway/
+COPY packages/agents/package.json packages/agents/
+COPY packages/policy-engine/package.json packages/policy-engine/
+COPY packages/email-parser/package.json packages/email-parser/
+COPY packages/carriers/package.json packages/carriers/
+COPY packages/voice/package.json packages/voice/
+
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: Build ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS build
+
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/*/node_modules ./packages/*/node_modules/
+COPY . .
+
+# Build all packages in dependency order
+RUN pnpm run build
+
+# ── Stage 3: Production image ───────────────────────────────────────────────
+FROM node:22-alpine AS production
+
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
+
+# Security: run as non-root
+RUN addgroup --system --gid 1001 returnclaw && \
+    adduser --system --uid 1001 returnclaw
+
+WORKDIR /app
+
+# Copy built artifacts and production dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/packages/core/dist ./packages/core/dist
+COPY --from=build /app/packages/core/package.json ./packages/core/
+COPY --from=build /app/packages/gateway/dist ./packages/gateway/dist
+COPY --from=build /app/packages/gateway/package.json ./packages/gateway/
+COPY --from=build /app/packages/agents/dist ./packages/agents/dist
+COPY --from=build /app/packages/agents/package.json ./packages/agents/
+COPY --from=build /app/packages/policy-engine/dist ./packages/policy-engine/dist
+COPY --from=build /app/packages/policy-engine/package.json ./packages/policy-engine/
+COPY --from=build /app/packages/email-parser/dist ./packages/email-parser/dist
+COPY --from=build /app/packages/email-parser/package.json ./packages/email-parser/
+COPY --from=build /app/packages/carriers/dist ./packages/carriers/dist
+COPY --from=build /app/packages/carriers/package.json ./packages/carriers/
+COPY --from=build /app/packages/voice/dist ./packages/voice/dist
+COPY --from=build /app/packages/voice/package.json ./packages/voice/
+COPY --from=build /app/package.json ./
+COPY --from=build /app/pnpm-workspace.yaml ./
+
+USER returnclaw
+
+ENV NODE_ENV=production
+ENV PORT=3001
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+
+CMD ["node", "packages/gateway/dist/index.js"]

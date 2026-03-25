@@ -1,0 +1,36 @@
+{
+  "name": "@returnclaw/cli",
+  "version": "0.1.0",
+  "description": "ReturnClaw CLI \u2014 manage returns from the command line",
+  "bin": {
+    "returnclaw": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "returnclaw",
+    "returns",
+    "cli",
+    "ai-agent",
+    "voice"
+  ],
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0",
+    "inquirer": "^9.2.0",
+    "conf": "^12.0.0",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/inquirer": "^9.0.0",
+    "typescript": "^5.7.0",
+    "ts-node": "^10.9.0"
+  }
+}

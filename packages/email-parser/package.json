@@ -1,0 +1,35 @@
+{
+  "name": "@returnclaw/email-parser",
+  "version": "0.1.0",
+  "description": "Email-based order detection \u2014 connects to Gmail, Outlook, IMAP and extracts structured order data",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.2.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "cheerio": "^1.0.0-rc.12",
+    "dayjs": "^1.11.11",
+    "googleapis": "^134.0.0",
+    "imapflow": "^1.0.162",
+    "mailparser": "^3.7.1",
+    "node-cron": "^3.0.3",
+    "openai": "^4.52.0",
+    "pino": "^9.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/mailparser": "^3.4.6",
+    "@types/node": "^20.14.0",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.5.0"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "private": true,
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)"
+}

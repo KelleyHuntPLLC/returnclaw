@@ -1,0 +1,36 @@
+{
+  "name": "@returnclaw/voice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Voice interface \u2014 OpenAI Realtime API integration for voice-first returns",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@returnclaw/core": "workspace:*",
+    "openai": "^4.73.0",
+    "ws": "^8.18.0",
+    "pino": "^9.2.0",
+    "zod": "^3.23.8",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/ws": "^8.5.12",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)"
+}

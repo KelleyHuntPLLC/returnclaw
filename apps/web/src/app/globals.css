@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+  --color-brand-950: #022c22;
+
+  --color-voice-50: #f5f3ff;
+  --color-voice-100: #ede9fe;
+  --color-voice-200: #ddd6fe;
+  --color-voice-300: #c4b5fd;
+  --color-voice-400: #a78bfa;
+  --color-voice-500: #8b5cf6;
+  --color-voice-600: #7c3aed;
+  --color-voice-700: #6d28d9;
+  --color-voice-800: #5b21b6;
+  --color-voice-900: #4c1d95;
+  --color-voice-950: #2e1065;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-orb-ring-1: orb-expand 3s ease-out infinite;
+  --animate-orb-ring-2: orb-expand 3s ease-out 1s infinite;
+  --animate-orb-ring-3: orb-expand 3s ease-out 2s infinite;
+  --animate-orb-glow: orb-glow 2s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-slide-in-left: slide-in-left 0.3s ease-out;
+}
+
+@keyframes orb-expand {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes orb-glow {
+  0% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); }
+  100% { box-shadow: 0 0 60px rgba(16, 185, 129, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  0% { opacity: 0; transform: translateX(-10px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes orb-wave {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1.5); }
+}
+
+@keyframes orb-listening {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Glass card utility */
+.glass-card {
+  background: rgba(24, 24, 27, 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+}
+
+/* Voice orb waveform bars */
+.orb-wave-bar {
+  animation: orb-wave 1s ease-in-out infinite;
+}
+
+.orb-wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.orb-wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.orb-wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.orb-wave-bar:nth-child(5) { animation-delay: 0.4s; }
+.orb-wave-bar:nth-child(6) { animation-delay: 0.5s; }
+.orb-wave-bar:nth-child(7) { animation-delay: 0.6s; }
