@@ -1,6 +1,7 @@
 /**
- * ReturnClaw — Backend Server
+ * ReturnClaw — Backend Server v1.0.0
  * Copyright (c) 2026 Kelley Hunt, PLLC. All rights reserved.
+ * Created with Perplexity Computer
  *
  * Handles: Gmail OAuth, email search, order extraction, return policy lookup
  */
@@ -13,8 +14,52 @@ const path = require('path');
 const { ImapFlow } = require('imapflow');
 
 const app = express();
-app.use(cors());
+
+// ============================================
+// CORS CONFIGURATION — Configurable for production
+// ============================================
+const ALLOWED_ORIGINS = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+  : ['*'];
+
+app.use(cors({
+  origin: ALLOWED_ORIGINS.includes('*') ? true : ALLOWED_ORIGINS,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
+
+// ============================================
+// REQUEST LOGGING — Timestamp every API request
+// ============================================
+app.use((req, res, next) => {
+  const ts = new Date().toISOString();
+  const method = req.method;
+  const url = req.originalUrl;
+  if (url.startsWith('/api/') || url.startsWith('/auth/')) {
+    console.log(`[${ts}] ${method} ${url}`);
+  }
+  next();
+});
+
+// ============================================
+// RATE LIMITING PLACEHOLDER
+// In production, integrate express-rate-limit or a Redis-backed limiter:
+//
+// const rateLimit = require('express-rate-limit');
+// const apiLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100,                  // limit each IP to 100 requests per window
+//   standardHeaders: true,
+//   legacyHeaders: false,
+//   message: { error: 'Too many requests, please try again later.' }
+// });
+// app.use('/api/', apiLimiter);
+// app.use('/auth/', apiLimiter);
+// ============================================
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
@@ -60,7 +105,13 @@ function getImapConfig(email) {
 // ============================================
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', mode: 'live', version: '0.7.0' });
+  res.json({
+    status: 'ok',
+    mode: 'live',
+    version: '1.0.0',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ============================================
@@ -185,12 +236,31 @@ app.post('/auth/imap/connect', async (req, res) => {
     console.error('IMAP connection error:', error.message);
 
     let userMessage = 'Connection failed.';
-    if (error.message.includes('Invalid credentials') || error.authenticationFailed) {
-      userMessage = 'Invalid email or app password. Make sure you\'re using an app-specific password, not your regular password. For Gmail: myaccount.google.com/apppasswords';
-    } else if (error.message.includes('AUTHENTICATIONFAILED')) {
-      userMessage = 'Authentication failed. Please generate an app-specific password for ReturnClaw.';
-    } else if (error.message.includes('ETIMEDOUT') || error.message.includes('ECONNREFUSED')) {
-      userMessage = 'Could not reach the email server. Please check your internet connection.';
+    const errMsg = error.message || '';
+
+    if (error.authenticationFailed || errMsg.includes('Invalid credentials') || errMsg.includes('AUTHENTICATIONFAILED')) {
+      const domain = (req.body.email || '').split('@')[1]?.toLowerCase();
+      if (domain && (domain === 'gmail.com' || domain === 'googlemail.com')) {
+        userMessage = 'Authentication failed for Gmail. Make sure you\'re using a 16-character app password (not your regular password). Generate one at myaccount.google.com/apppasswords — you need 2-Step Verification enabled.';
+      } else if (domain && (domain === 'outlook.com' || domain === 'hotmail.com' || domain === 'live.com')) {
+        userMessage = 'Authentication failed for Outlook/Hotmail. Use an app password from account.microsoft.com/security under "Advanced security options". Requires 2-Step Verification.';
+      } else if (domain && (domain === 'yahoo.com' || domain === 'yahoo.co.uk')) {
+        userMessage = 'Authentication failed for Yahoo. Generate an app password at login.yahoo.com/account/security. You may need to enable "Allow apps that use less secure sign-in."';
+      } else if (domain && (domain === 'icloud.com' || domain === 'me.com' || domain === 'mac.com')) {
+        userMessage = 'Authentication failed for iCloud. Generate an app-specific password at appleid.apple.com → Sign-In and Security → App-Specific Passwords. Two-factor authentication is required.';
+      } else {
+        userMessage = 'Invalid email or app password. Make sure you\'re using an app-specific password, not your regular password.';
+      }
+    } else if (errMsg.includes('ETIMEDOUT')) {
+      userMessage = 'Connection timed out trying to reach the email server. Please check your internet connection and try again. If you\'re behind a firewall, IMAP port 993 may be blocked.';
+    } else if (errMsg.includes('ECONNREFUSED')) {
+      userMessage = 'Connection refused by the email server. The server may be temporarily down, or the port may be blocked by your network. Try again in a few minutes.';
+    } else if (errMsg.includes('ENOTFOUND') || errMsg.includes('getaddrinfo')) {
+      userMessage = 'Could not resolve the email server address. Please check your internet connection and make sure the email address is correct.';
+    } else if (errMsg.includes('certificate') || errMsg.includes('SSL') || errMsg.includes('TLS')) {
+      userMessage = 'SSL/TLS certificate error when connecting to the email server. This may be a network issue — try from a different network or disable VPN if active.';
+    } else if (errMsg.includes('ECONNRESET')) {
+      userMessage = 'The connection was reset by the email server. This is usually temporary — please try again in a moment.';
     }
 
     res.status(401).json({ error: userMessage });
@@ -227,6 +297,12 @@ async function searchViaImap(session, retailer, maxResults = 10) {
       nike: 'nike.com',
       costco: 'costco.com',
       nordstrom: 'nordstrom.com',
+      adidas: 'adidas.com',
+      lululemon: 'lululemon.com',
+      rei: 'rei.com',
+      potterybarn: 'potterybarn.com',
+      'williams-sonoma': 'williams-sonoma.com',
+      wayfair: 'wayfair.com',
     };
 
     let messages = [];
@@ -289,7 +365,16 @@ app.post('/api/imap/search', async (req, res) => {
     res.json({ orders, count: orders.length });
   } catch (error) {
     console.error('IMAP search error:', error.message);
-    res.status(500).json({ error: 'Failed to search emails. Please try reconnecting.' });
+    const errMsg = error.message || '';
+    let userMessage = 'Failed to search emails. Please try reconnecting.';
+    if (errMsg.includes('ETIMEDOUT')) {
+      userMessage = 'The search timed out. Your mailbox may have a lot of emails — try specifying a retailer to narrow the search.';
+    } else if (errMsg.includes('AUTHENTICATIONFAILED')) {
+      userMessage = 'Your session expired. Please reconnect your email.';
+    } else if (errMsg.includes('ECONNRESET')) {
+      userMessage = 'The connection was interrupted. Please try your search again.';
+    }
+    res.status(500).json({ error: userMessage });
   }
 });
 
@@ -430,6 +515,12 @@ app.post('/api/email/search', async (req, res) => {
         nordstrom: 'from:nordstrom.com',
         macys: 'from:macys.com',
         homedepot: 'from:homedepot.com',
+        adidas: 'from:adidas.com',
+        lululemon: 'from:lululemon.com',
+        rei: 'from:rei.com',
+        potterybarn: 'from:potterybarn.com',
+        'williams-sonoma': 'from:williams-sonoma.com',
+        wayfair: 'from:wayfair.com',
       };
       const domain = retailerDomains[retailer.toLowerCase()];
       if (domain) searchQuery = `${domain} ${searchQuery}`;
@@ -521,6 +612,12 @@ function extractOrderFromEmail(subject, from, body, date) {
   else if (fromLower.includes('nordstrom')) order.retailer = 'Nordstrom';
   else if (fromLower.includes('macys') || fromLower.includes("macy's")) order.retailer = "Macy's";
   else if (fromLower.includes('homedepot') || fromLower.includes('home depot')) order.retailer = 'Home Depot';
+  else if (fromLower.includes('adidas')) order.retailer = 'Adidas';
+  else if (fromLower.includes('lululemon')) order.retailer = 'Lululemon';
+  else if (fromLower.includes('rei.com') || fromLower.includes('rei ')) order.retailer = 'REI';
+  else if (fromLower.includes('potterybarn') || fromLower.includes('pottery barn')) order.retailer = 'Pottery Barn';
+  else if (fromLower.includes('williams-sonoma') || fromLower.includes('williams sonoma')) order.retailer = 'Williams-Sonoma';
+  else if (fromLower.includes('wayfair')) order.retailer = 'Wayfair';
   else {
     // Try to extract from domain
     const domainMatch = from.match(/@([^>]+)/);
@@ -655,9 +752,88 @@ app.get('/api/policy/:retailer', (req, res) => {
         'Print prepaid USPS label'
       ]
     },
+    // --- 6 NEW RETAILERS ---
+    adidas: {
+      retailer: 'Adidas', window: 30, freeReturn: true,
+      methods: ['Adidas Store Return', 'UPS Drop-off', 'USPS Shipping'],
+      deepLinkTemplate: 'https://www.adidas.com/us/order-tracker',
+      fallbackUrl: 'https://www.adidas.com/us/help-topics-returns_refunds.html',
+      instructions: [
+        'Click the link', 'Sign in to your Adidas account',
+        'Go to order history', 'Select the item to return',
+        'Choose return reason', 'Print prepaid label',
+        'Drop off at UPS or USPS'
+      ],
+      note: 'adiClub members may get extended return windows. Personalized items are final sale.'
+    },
+    lululemon: {
+      retailer: 'Lululemon', window: 30, freeReturn: true,
+      methods: ['Lululemon Store Return', 'Mail Return'],
+      deepLinkTemplate: 'https://shop.lululemon.com/account/order-history',
+      fallbackUrl: 'https://info.lululemon.com/help/our-policies/return-policy',
+      instructions: [
+        'Click the link', 'Sign in to Lululemon',
+        'Select order and click "Start Return"',
+        'Choose in-store or mail return',
+        'Print prepaid label if mailing'
+      ],
+      note: 'Items must be unworn with tags. Like New program accepts gently used items for store credit.'
+    },
+    rei: {
+      retailer: 'REI', window: 365, freeReturn: true,
+      methods: ['REI Store Return', 'Mail Return'],
+      deepLinkTemplate: 'https://www.rei.com/account/orders',
+      fallbackUrl: 'https://www.rei.com/help/return-policy.html',
+      instructions: [
+        'Click the link', 'Sign in to REI',
+        'Select order and start return',
+        'Choose in-store or mail',
+        'Co-op members get full year satisfaction guarantee'
+      ],
+      note: 'REI Co-op members get 1-year satisfaction guarantee. Electronics and outdoor electronics have 90-day window.'
+    },
+    potterybarn: {
+      retailer: 'Pottery Barn', window: 30, freeReturn: false,
+      methods: ['Pottery Barn Store Return', 'UPS Shipping'],
+      deepLinkTemplate: 'https://www.potterybarn.com/customer-service/order-status.html',
+      fallbackUrl: 'https://www.potterybarn.com/customer-service/return-policy.html',
+      instructions: [
+        'Click the link', 'Sign in to Pottery Barn',
+        'Locate your order', 'Request a return',
+        'Print return label (shipping fee deducted)',
+        'Drop off at UPS'
+      ],
+      note: 'Furniture returns subject to pickup fee. Monogrammed items are final sale. Return shipping fee applies for mail returns.'
+    },
+    'williams-sonoma': {
+      retailer: 'Williams-Sonoma', window: 30, freeReturn: false,
+      methods: ['Williams-Sonoma Store Return', 'UPS Shipping'],
+      deepLinkTemplate: 'https://www.williams-sonoma.com/customer-service/order-status.html',
+      fallbackUrl: 'https://www.williams-sonoma.com/customer-service/return-policy.html',
+      instructions: [
+        'Click the link', 'Sign in to Williams-Sonoma',
+        'Locate your order', 'Request a return',
+        'Print return label', 'Drop off at UPS'
+      ],
+      note: 'Electrics must be returned unused in original packaging. Personalized items and perishables are final sale. Return shipping fee may apply.'
+    },
+    wayfair: {
+      retailer: 'Wayfair', window: 30, freeReturn: true,
+      methods: ['Mail Return', 'Large Item Pickup'],
+      deepLinkTemplate: 'https://www.wayfair.com/v/account/orders',
+      fallbackUrl: 'https://www.wayfair.com/help/article/return_policy',
+      instructions: [
+        'Click the link', 'Sign in to Wayfair',
+        'Find order and click "Return Item"',
+        'Select reason and refund method',
+        'Print prepaid label',
+        'Large items will be picked up — Wayfair arranges it'
+      ],
+      note: 'Items must be unassembled and in original packaging for full refund. Large/heavy items get free pickup. Clearance and open box items are final sale.'
+    },
   };
 
-  const key = req.params.retailer.toLowerCase().replace(/[^a-z]/g, '');
+  const key = req.params.retailer.toLowerCase().replace(/[^a-z-]/g, '');
   const policy = policies[key];
 
   if (policy) {
@@ -692,7 +868,7 @@ app.get('/api/policy/:retailer', (req, res) => {
 // Generate deep link for return
 app.post('/api/return/link', (req, res) => {
   const { retailer, orderId } = req.body;
-  const key = retailer.toLowerCase().replace(/[^a-z]/g, '');
+  const key = retailer.toLowerCase().replace(/[^a-z-]/g, '');
   const templates = {
     amazon: 'https://www.amazon.com/gp/orc/returns/homepage.html?orderID={orderId}',
     walmart: 'https://www.walmart.com/orders/{orderId}',
@@ -702,6 +878,12 @@ app.post('/api/return/link', (req, res) => {
     nike: 'https://www.nike.com/orders',
     costco: 'https://www.costco.com/my-account',
     nordstrom: 'https://www.nordstrom.com/account/orders',
+    adidas: 'https://www.adidas.com/us/order-tracker',
+    lululemon: 'https://shop.lululemon.com/account/order-history',
+    rei: 'https://www.rei.com/account/orders',
+    potterybarn: 'https://www.potterybarn.com/customer-service/order-status.html',
+    'williams-sonoma': 'https://www.williams-sonoma.com/customer-service/order-status.html',
+    wayfair: 'https://www.wayfair.com/v/account/orders',
   };
 
   const template = templates[key];
@@ -726,8 +908,9 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🦞 ReturnClaw running at http://localhost:${PORT}`);
+  console.log(`🦞 ReturnClaw v1.0.0 running at http://localhost:${PORT}`);
   console.log(`   OAuth callback: http://localhost:${PORT}/auth/google/callback`);
   console.log(`   IMAP connect:   POST /auth/imap/connect`);
   console.log(`   Supported IMAP: ${Object.keys(IMAP_CONFIGS).join(', ')}`);
+  console.log(`   CORS origins:   ${ALLOWED_ORIGINS.join(', ')}`);
 });
