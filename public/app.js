@@ -1,6 +1,7 @@
 /**
- * ReturnClaw — Frontend Application
+ * ReturnClaw — Frontend Application v1.0.0
  * Copyright (c) 2026 Kelley Hunt, PLLC. All rights reserved.
+ * Created with Perplexity Computer
  *
  * Dual-mode: makes real API calls when running with backend (node server.js),
  * falls back to mock/demo behavior when running as static site (GitHub Pages).
@@ -134,6 +135,33 @@ const liveModeReady = detectLiveMode();
     });
   });
 })();
+
+
+/* ============================================================
+   SECTION 2: LEVENSHTEIN DISTANCE FOR FUZZY MATCHING
+   ============================================================ */
+
+function levenshteinDistance(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
 
 
 /* ============================================================
@@ -299,6 +327,72 @@ const RETAILERS = {
     icon: '🧥',
     dropoffs: ['H&M Store', 'USPS Drop-off'],
     defectiveNote: 'Defective items qualify for free return shipping at H&M'
+  },
+  adidas: {
+    name: 'Adidas',
+    window: 30,
+    shipping: 'Free return shipping',
+    refund: 'Refund to original payment method',
+    conditions: ['Items must be unworn and in original packaging', 'adiClub members may get extended window', 'Personalized items are final sale'],
+    returnUrl: 'https://www.adidas.com/us/help-topics-returns_refunds.html',
+    icon: '👟',
+    dropoffs: ['Adidas Store', 'UPS Drop-off', 'USPS Drop-off'],
+    defectiveNote: 'Defective items qualify for free return shipping regardless of window'
+  },
+  lululemon: {
+    name: 'Lululemon',
+    window: 30,
+    shipping: 'Free return shipping',
+    refund: 'Refund to original payment method',
+    conditions: ['Items must be unworn with tags', 'Like New program accepts gently used for store credit'],
+    returnUrl: 'https://info.lululemon.com/help/our-policies/return-policy',
+    icon: '🧘',
+    dropoffs: ['Lululemon Store', 'Mail Return'],
+    defectiveNote: 'Lululemon quality promise covers defective items for replacement'
+  },
+  rei: {
+    name: 'REI',
+    window: 365,
+    shipping: 'Free return shipping for Co-op members',
+    refund: 'Refund to original payment method',
+    conditions: ['Co-op members: 1-year satisfaction guarantee', 'Electronics: 90-day window', 'Items should be clean and dry'],
+    returnUrl: 'https://www.rei.com/help/return-policy.html',
+    icon: '🏔️',
+    dropoffs: ['REI Store', 'Mail Return'],
+    defectiveNote: 'REI satisfaction guarantee covers defective items with full refund'
+  },
+  potterybarn: {
+    name: 'Pottery Barn',
+    window: 30,
+    shipping: 'Return shipping fee applies for mail returns',
+    refund: 'Refund to original payment method',
+    conditions: ['Furniture returns subject to pickup fee', 'Monogrammed items are final sale'],
+    returnUrl: 'https://www.potterybarn.com/customer-service/return-policy.html',
+    icon: '🏡',
+    dropoffs: ['Pottery Barn Store', 'UPS Drop-off'],
+    defectiveNote: 'Defective items receive free return shipping'
+  },
+  williamsSonoma: {
+    name: 'Williams-Sonoma',
+    window: 30,
+    shipping: 'Return shipping fee may apply',
+    refund: 'Refund to original payment method',
+    conditions: ['Electrics must be unused in original packaging', 'Personalized items and perishables are final sale'],
+    returnUrl: 'https://www.williams-sonoma.com/customer-service/return-policy.html',
+    icon: '🍽️',
+    dropoffs: ['Williams-Sonoma Store', 'UPS Drop-off'],
+    defectiveNote: 'Defective items receive free return shipping'
+  },
+  wayfair: {
+    name: 'Wayfair',
+    window: 30,
+    shipping: 'Free return shipping; large items get free pickup',
+    refund: 'Refund to original payment method',
+    conditions: ['Items must be unassembled and in original packaging', 'Clearance and open box items are final sale'],
+    returnUrl: 'https://www.wayfair.com/help/article/return_policy',
+    icon: '🛋️',
+    dropoffs: ['Mail Return', 'Large Item Pickup'],
+    defectiveNote: 'Wayfair covers return shipping and pickup for defective items'
   }
 };
 
@@ -317,7 +411,13 @@ const RETAILER_ALIASES = {
   'sephora': 'sephora',
   "macy's": 'macys', 'macys': 'macys', 'macy': 'macys',
   'gap': 'gap', 'the gap': 'gap',
-  'h&m': 'hm', 'hm': 'hm', 'h and m': 'hm', 'h & m': 'hm'
+  'h&m': 'hm', 'hm': 'hm', 'h and m': 'hm', 'h & m': 'hm',
+  'adidas': 'adidas',
+  'lululemon': 'lululemon', 'lulu lemon': 'lululemon', 'lulu': 'lululemon',
+  'rei': 'rei',
+  'pottery barn': 'potterybarn', 'potterybarn': 'potterybarn',
+  'williams-sonoma': 'williamsSonoma', 'williams sonoma': 'williamsSonoma', 'williamssonoma': 'williamsSonoma',
+  'wayfair': 'wayfair'
 };
 
 // Common items and their emojis
@@ -329,7 +429,7 @@ const ITEM_EMOJIS = {
   'shoes': '👟', 'sneakers': '👟', 'boots': '👢', 'sandals': '👡', 'runners': '👟', 'air max': '👟',
   'shirt': '👕', 'tshirt': '👕', 't-shirt': '👕', 'top': '👕', 'blouse': '👚',
   'dress': '👗', 'jacket': '🧥', 'coat': '🧥', 'hoodie': '🧥', 'sweater': '🧥',
-  'pants': '👖', 'jeans': '👖', 'shorts': '🩳', '501': '👖',
+  'pants': '👖', 'jeans': '👖', 'shorts': '🩳', '501': '👖', 'leggings': '👖',
   'watch': '⌚', 'apple watch': '⌚',
   'tv': '📺', 'television': '📺', 'monitor': '🖥️',
   'camera': '📷',
@@ -343,6 +443,8 @@ const ITEM_EMOJIS = {
   'tumbler': '🥤', 'stanley': '🥤', 'water bottle': '🥤',
   'pot': '🍳', 'instant pot': '🍳', 'kitchen': '🍳',
   'cable': '🔌', 'charger': '🔌', 'lightning': '🔌',
+  'yoga mat': '🧘', 'mat': '🧘',
+  'couch': '🛋️', 'sofa': '🛋️', 'furniture': '🛋️',
   default: '📦'
 };
 
@@ -483,6 +585,7 @@ function generateTrackingNumber() {
 
 // ============================================================
 // NLU — Intent Parsing (Upgraded: 30+ consumer return intents)
+// With Levenshtein fuzzy matching for retailer names
 // ============================================================
 
 // Domain-specific intent patterns — checked before generic return patterns
@@ -534,9 +637,6 @@ function parseIntent(text) {
   lower = lower.replace(/jean\s*mail/gi, 'gmail');
   lower = lower.replace(/out\s+look/gi, 'outlook');
   lower = lower.replace(/\byou\s*tube\b/gi, ''); // ignore youtube mishearing
-
-  // Normalize affirmative variations to simplify downstream matching
-  // (we don't replace — just note that "yeah"/"yep"/"sure"/"ok"/"go ahead" are handled below)
 
   // Off-topic / greeting (short messages only)
   if (/^(hi|hello|hey|sup|what's up|howdy|yo)\b/i.test(lower) && lower.length < 20) {
@@ -634,12 +734,12 @@ function parseIntent(text) {
     return { intent: 'retailer_mention', retailer: retailerOnly };
   }
 
-  // Yes/no/affirmative
-  if (/^(yes|yeah|yep|sure|ok|okay|absolutely|definitely|go ahead|do it|let's do it|please|yea|ya|yup)/i.test(lower)) {
+  // Smarter yes/no handling — expanded affirmative recognition
+  if (/^(yes|yeah|yep|sure|ok|okay|absolutely|definitely|go ahead|do it|let's do it|let's do this|please|yea|ya|yup|go for it|proceed|make it happen|affirmative|for sure|bet|sounds good|perfect|right|correct|exactly|you bet|of course|why not|alright|fine|roger)/i.test(lower)) {
     return { intent: 'yes' };
   }
 
-  if (/^(no|nah|nope|not now|never mind|cancel|skip|i'm good|no thanks)/i.test(lower)) {
+  if (/^(no|nah|nope|not now|never mind|cancel|skip|i'm good|no thanks|not really|negative|pass|forget it)/i.test(lower)) {
     return { intent: 'no' };
   }
 
@@ -683,14 +783,44 @@ function findRetailer(text) {
   if (!text) return null;
   const lower = text.toLowerCase().trim().replace(/[.,!?;]+$/, '');
 
+  // Direct alias match
   if (RETAILER_ALIASES[lower]) return RETAILER_ALIASES[lower];
 
+  // Substring match in aliases
   for (const [alias, key] of Object.entries(RETAILER_ALIASES)) {
     if (lower.includes(alias) || alias.includes(lower)) return key;
   }
 
+  // Substring match in retailer names
   for (const [key, r] of Object.entries(RETAILERS)) {
     if (lower.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(lower)) return key;
+  }
+
+  // Fuzzy matching with Levenshtein distance
+  // Only for words >= 4 chars to avoid false positives
+  if (lower.length >= 4) {
+    let bestMatch = null;
+    let bestDistance = Infinity;
+    const threshold = lower.length <= 5 ? 1 : 2; // stricter for short names
+
+    for (const [alias, key] of Object.entries(RETAILER_ALIASES)) {
+      if (alias.length < 3) continue;
+      const dist = levenshteinDistance(lower, alias);
+      if (dist <= threshold && dist < bestDistance) {
+        bestDistance = dist;
+        bestMatch = key;
+      }
+    }
+
+    for (const [key, r] of Object.entries(RETAILERS)) {
+      const dist = levenshteinDistance(lower, r.name.toLowerCase());
+      if (dist <= threshold && dist < bestDistance) {
+        bestDistance = dist;
+        bestMatch = key;
+      }
+    }
+
+    if (bestMatch) return bestMatch;
   }
 
   return null;
@@ -942,14 +1072,22 @@ class ReturnClawAgent {
     this.orbArea = document.getElementById('orbArea');
     this.orbLabel = document.getElementById('orbLabel');
     this.orbGlow = document.getElementById('orbGlow');
+    this.orbReadyBadge = document.getElementById('orbReadyBadge');
     this.pipeline = document.getElementById('pipeline');
     this.modalOverlay = document.getElementById('modalOverlay');
     this.modalClose = document.getElementById('modalClose');
     this.howItWorksBtn = document.getElementById('howItWorksBtn');
+    this.historyPanel = document.getElementById('historyPanel');
+    this.historyToggleBtn = document.getElementById('historyToggleBtn');
+    this.historyCloseBtn = document.getElementById('historyCloseBtn');
+    this.historyList = document.getElementById('historyList');
+    this.historyEmpty = document.getElementById('historyEmpty');
 
     this._bindEvents();
     this._setupSpeechCallbacks();
     this._setupOAuthListener();
+    this._setupQuickActions();
+    this._setupHistoryPanel();
   }
 
   _bindEvents() {
@@ -978,10 +1116,11 @@ class ReturnClawAgent {
         this.orb.classList.add('listening');
         this.orb.classList.remove('speaking');
         this.orbLabel.textContent = 'Listening...';
+        if (this.orbReadyBadge) this.orbReadyBadge.style.display = 'none';
       } else {
         this.orb.classList.remove('listening');
         if (!this.speech.isSpeaking) {
-          this.orbLabel.textContent = 'Click to speak';
+          this.orbLabel.textContent = 'Tap to speak';
         }
       }
     };
@@ -1003,6 +1142,118 @@ class ReturnClawAgent {
         // Don't speak this — just show it in chat
       }
     };
+  }
+
+  // ============================================================
+  // QUICK ACTION BUTTON HANDLERS
+  // ============================================================
+  _setupQuickActions() {
+    const bar = document.getElementById('quickActionBar');
+    if (!bar) return;
+    bar.querySelectorAll('.quick-action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        this._handleQuickAction(action);
+      });
+    });
+  }
+
+  async _handleQuickAction(action) {
+    // Ensure conversation is started
+    if (this.state === 'idle') {
+      this.orbArea.classList.add('minimized');
+      if (this.orbReadyBadge) this.orbReadyBadge.style.display = 'none';
+    }
+
+    switch (action) {
+      case 'new-return': {
+        this._resetContext();
+        this._resetPipeline();
+        this.state = 'awaiting_item';
+        const msg = "Let's start a new return. What item would you like to return, and from which retailer?";
+        this._addAgentMessage(msg);
+        await this.speech.speak(msg);
+        this._startListeningAfterDelay();
+        break;
+      }
+      case 'track-return': {
+        if (this.session.completedReturns.length > 0) {
+          const last = this.session.completedReturns[this.session.completedReturns.length - 1];
+          const msg = `Your most recent return: ${last.emoji || '📦'} ${last.item} from ${RETAILERS[last.retailer]?.name || 'retailer'}. Tracking: ${last.tracking}. Status: In Transit. Is there a specific return you'd like to check?`;
+          this._addAgentMessage(msg);
+          await this.speech.speak(msg);
+        } else {
+          const msg = "You don't have any returns to track yet. Would you like to start a return?";
+          this._addAgentMessage(msg);
+          await this.speech.speak(msg);
+        }
+        this.state = 'awaiting_item';
+        this._startListeningAfterDelay();
+        break;
+      }
+      case 'policy-lookup': {
+        const msg = "Which retailer's return policy would you like to look up? Just say the name — for example, \"Amazon\" or \"Target\".";
+        this._addAgentMessage(msg);
+        await this.speech.speak(msg);
+        this.state = 'awaiting_item';
+        this._startListeningAfterDelay();
+        break;
+      }
+      case 'return-history': {
+        this._toggleHistoryPanel();
+        break;
+      }
+    }
+  }
+
+  // ============================================================
+  // RETURN HISTORY PANEL
+  // ============================================================
+  _setupHistoryPanel() {
+    if (this.historyToggleBtn) {
+      this.historyToggleBtn.addEventListener('click', () => this._toggleHistoryPanel());
+    }
+    if (this.historyCloseBtn) {
+      this.historyCloseBtn.addEventListener('click', () => this._closeHistoryPanel());
+    }
+  }
+
+  _toggleHistoryPanel() {
+    if (this.historyPanel) {
+      this.historyPanel.classList.toggle('open');
+      this._updateHistoryPanel();
+    }
+  }
+
+  _closeHistoryPanel() {
+    if (this.historyPanel) {
+      this.historyPanel.classList.remove('open');
+    }
+  }
+
+  _updateHistoryPanel() {
+    if (!this.historyList || !this.historyEmpty) return;
+
+    if (this.session.completedReturns.length === 0) {
+      this.historyEmpty.style.display = 'flex';
+      this.historyList.innerHTML = '';
+      return;
+    }
+
+    this.historyEmpty.style.display = 'none';
+    this.historyList.innerHTML = this.session.completedReturns.map((ret, i) => {
+      const r = RETAILERS[ret.retailer];
+      return `
+        <div class="history-item">
+          <div class="history-item-header">
+            <span class="history-item-name">${ret.emoji || '📦'} ${ret.item}</span>
+            <span class="history-item-price">$${ret.price.toFixed(2)}</span>
+          </div>
+          <div class="history-item-meta">${r ? r.name : ret.retailer} · ${ret.tracking}</div>
+          <div class="history-item-status">● In Progress</div>
+        </div>
+      `;
+    }).join('');
   }
 
   // ============================================================
@@ -1042,245 +1293,207 @@ class ReturnClawAgent {
       const followUp = `What would you like to return? Or I can show you your recent orders.`;
       this._addAgentMessage(followUp);
       await this.speech.speak(followUp);
-
-      await this._showTyping(1800);
-
-      // In live mode, search real emails
-      if (isLiveMode) {
-        await this._searchRealOrders();
-      } else {
-        await this._showFoundOrders();
-      }
+      this.state = 'awaiting_item';
+      this._startListeningAfterDelay();
     }
   }
 
-  // ============================================================
-  // LIVE MODE: Real Email Search (supports OAuth and IMAP)
-  // ============================================================
+  // Real order search via backend
   async _searchRealOrders() {
+    if (!this.sessionId || !isLiveMode) return false;
     try {
-      // Choose endpoint based on connection type
-      const isImap = this.session.connectionType === 'imap';
-      const endpoint = isImap ? '/api/imap/search' : '/api/email/search';
-
-      const res = await fetch(endpoint, {
+      await this._showTyping(1800);
+      const res = await fetch('/api/email/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: this.sessionId,
-          retailer: this.context.retailer,
-          query: this.context.item,
-        }),
+          retailer: this.context.retailer || undefined
+        })
       });
-      const data = await res.json();
-
-      if (data.orders && data.orders.length > 0) {
-        await this._displayRealOrders(data.orders);
-      } else {
-        // No real orders found — guide user with helpful context
-        const msg = "I searched your email but couldn't find orders matching that. Try telling me the retailer name and approximate date, and I'll narrow it down.";
-        this._addAgentMessage(msg);
-        await this.speech.speak(msg);
-        // Fall back to mock orders for demo continuity
-        await this._delay(500);
-        await this._showFoundOrders();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.orders && data.orders.length > 0) {
+          this._realOrders = data.orders;
+          await this._showFoundOrders();
+          return true;
+        }
       }
-    } catch (error) {
-      console.error('Email search error:', error);
-      const msg = "Hmm, the connection didn't go through. You can try again or enter your order details manually.";
+    } catch (e) {
+      console.error('Real order search failed:', e);
+      const msg = "I had trouble searching your emails. Let's continue with what we know.";
       this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      await this._delay(500);
-      await this._showFoundOrders();
     }
+    return false;
   }
 
   async _displayRealOrders(orders) {
-    const msg = `Found ${orders.length} order${orders.length > 1 ? 's' : ''} in your email. Which one are you returning?`;
-
     const card = document.createElement('div');
     card.className = 'action-card';
     let html = `
       <div class="card-header">
         <div class="card-status-dot green"></div>
-        <div class="card-title">Found ${orders.length} Orders From Email</div>
+        <div class="card-title">📧 Orders Found in Email</div>
       </div>
-      <div class="order-select-list">
+      <div class="card-body">
+        <div class="order-select-list">
     `;
-
     orders.forEach((order, idx) => {
-      const dateStr = order.date ? formatMonthDay(new Date(order.date)) : 'Recent';
-      const priceStr = order.total ? `$${order.total.toFixed(2)}` : '';
-      const retailerStr = order.retailer || 'Unknown';
-      const itemStr = order.items && order.items.length > 0 ? order.items[0] : order.subject;
-      const orderIdStr = order.orderId || '';
-      const emoji = getItemEmoji(itemStr);
-
+      const emoji = getItemEmoji(order.subject || '');
+      const date = order.date ? formatDate(new Date(order.date)) : 'Unknown date';
       html += `
         <div class="order-select-item" data-real-idx="${idx}">
           <div class="order-thumb">${emoji}</div>
           <div class="order-info">
-            <div class="order-item-name">${itemStr}</div>
-            <div class="order-meta">${retailerStr} — ${dateStr}${priceStr ? ' · ' + priceStr : ''}${orderIdStr ? '<br>Order #' + orderIdStr : ''}</div>
+            <div class="order-item-name">${order.subject || 'Order'}</div>
+            <div class="order-meta">${order.retailer || 'Unknown'} · ${date}${order.total ? ' · $' + order.total.toFixed(2) : ''}</div>
           </div>
-          <span class="select-indicator">Select →</span>
+          <div class="select-indicator"></div>
         </div>
       `;
     });
-
-    html += '</div>';
+    html += `</div></div>`;
     card.innerHTML = html;
-    this._addAgentMessageWithCard(msg, card);
-    await this.speech.speak(msg);
-
-    this._realOrders = orders;
-    this.state = 'selecting_order';
-
+    this._addAgentMessageWithCard(`I found ${orders.length} order${orders.length > 1 ? 's' : ''} in your email:`, card);
+    this.state = 'select_real_order';
     setTimeout(() => {
-      card.querySelectorAll('.order-select-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const idx = parseInt(el.dataset.realIdx);
+      card.querySelectorAll('.order-select-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const idx = parseInt(item.dataset.realIdx);
           this._selectRealOrder(idx);
         });
       });
-    }, 50);
+    }, 100);
   }
 
   async _selectRealOrder(idx) {
     const order = this._realOrders[idx];
-    // Map real order data to context
-    const retailerKey = order.retailer ? findRetailer(order.retailer) : this.context.retailer;
-    this.context.retailer = retailerKey || 'amazon';
-    this.context.item = (order.items && order.items.length > 0) ? order.items[0] : order.subject;
-    this.context.emoji = getItemEmoji(this.context.item);
-    this.context.orderId = order.orderId || generateOrderId(this.context.retailer);
+    if (!order) return;
+    this.context.item = order.subject || 'your item';
+    this.context.orderId = order.orderId;
+    this.context.orderDate = order.date ? new Date(order.date) : getRecentDate(7);
     this.context.price = order.total || 0;
-    this.context.orderDate = order.date ? new Date(order.date) : getRecentDate();
-
-    const r = RETAILERS[this.context.retailer];
-    if (!r) {
-      // Fallback if retailer not in our database
-      this.context.retailer = 'amazon';
+    this.context.emoji = getItemEmoji(order.subject || '');
+    if (order.retailer) {
+      const rKey = findRetailer(order.retailer);
+      if (rKey) this.context.retailer = rKey;
     }
-
     await this._showPolicyCheckForReal();
   }
 
-  // ============================================================
-  // LIVE MODE: Real Policy Check
-  // ============================================================
   async _showPolicyCheckForReal() {
-    const r = RETAILERS[this.context.retailer];
+    if (!this.context.retailer) {
+      const msg = `I found your order for "${this.context.item}". Which retailer is this from?`;
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this.state = 'awaiting_retailer';
+      this._startListeningAfterDelay();
+      return;
+    }
 
-    this.pipeline.classList.add('visible');
+    const r = RETAILERS[this.context.retailer];
     this._setPipelineStep('triage', 'done');
     this._setPipelineStep('policy', 'active');
-
-    const triageMsg = `Got it — you want to return ${this.context.item} from ${r.name}. Let me check the return policy.`;
-    this._addAgentMessage(triageMsg);
-    await this.speech.speak(triageMsg);
+    this.pipeline.classList.add('visible');
 
     await this._showTyping(1500);
 
-    // In live mode, fetch policy from API
+    // Use real policy API if available
     if (isLiveMode) {
       try {
-        const orderDateParam = this.context.orderDate ? `?orderDate=${this.context.orderDate.toISOString()}` : '';
-        const res = await fetch(`/api/policy/${this.context.retailer}${orderDateParam}`);
-        const policy = await res.json();
-
-        this._setPipelineStep('policy', 'done');
-        this._setPipelineStep('execution', 'active');
-
-        this.context.daysRemaining = policy.daysRemaining;
-
-        const policyCard = this._createPolicyCard(r, policy.eligible);
-        const policyMsg = policy.eligible
-          ? `Good news — your ${this.context.item} is eligible for return. ${r.name} gives you ${policy.window} days, and you have ${policy.daysRemaining} days left. ${r.shipping}. Would you like me to start the return?`
-          : `Unfortunately, the return window for this order has passed. ${r.name}'s policy is ${policy.window} days.`;
-
-        this._addAgentMessageWithCard(policyMsg, policyCard);
-        await this.speech.speak(policyMsg);
-
-        if (policy.eligible) {
-          this.state = 'awaiting_return_confirm';
+        const policyRes = await fetch(`/api/policy/${this.context.retailer}?orderDate=${this.context.orderDate?.toISOString() || ''}`);
+        if (policyRes.ok) {
+          const policy = await policyRes.json();
+          this.context.daysRemaining = policy.daysRemaining;
+          const policyCard = this._createPolicyCard(r, policy.eligible);
+          const msg = policy.eligible
+            ? `${r.name} has a ${r.window}-day return window. You have ${policy.daysRemaining} days left. Would you like me to start this return?`
+            : `The return window for ${r.name} has expired. ${this._getCreditCardProtectionTip()}`;
+          this._addAgentMessageWithCard(msg, policyCard);
+          await this.speech.speak(msg);
+          this._setPipelineStep('policy', 'done');
+          this.state = policy.eligible ? 'confirm_return' : 'awaiting_item';
           this._startListeningAfterDelay();
-        } else {
-          this.state = 'awaiting_item';
-          this._startListeningAfterDelay();
+          return;
         }
-        return;
-      } catch (e) {
-        console.error('Policy fetch error:', e);
-        // Fall through to local policy data
-      }
+      } catch (e) { /* fallback to mock */ }
     }
 
-    // Fallback to local policy logic
+    // Fallback to mock
     this.context.daysRemaining = getDaysRemaining(this.context.retailer);
-    this._setPipelineStep('policy', 'done');
-    this._setPipelineStep('execution', 'active');
-
     const policyCard = this._createPolicyCard(r, true);
-    const policyMsg = `Good news — your ${this.context.item} is eligible for return. ${r.name} gives you ${r.window} days, and you have ${this.context.daysRemaining} days left. ${r.shipping}. Would you like me to start the return?`;
-
-    this._addAgentMessageWithCard(policyMsg, policyCard);
-    await this.speech.speak(policyMsg);
-
-    this.state = 'awaiting_return_confirm';
+    const msg = `${r.name} has a ${r.window}-day return window. You have ${this.context.daysRemaining} days left. Would you like me to start this return?`;
+    this._addAgentMessageWithCard(msg, policyCard);
+    await this.speech.speak(msg);
+    this._setPipelineStep('policy', 'done');
+    this.state = 'confirm_return';
     this._startListeningAfterDelay();
   }
 
-  // ============================================================
-  // LIVE MODE: Real Return Deep Link
-  // ============================================================
   async _generateRealReturnLink() {
-    if (!isLiveMode) return null;
+    if (!isLiveMode || !this.context.retailer) return null;
     try {
       const res = await fetch('/api/return/link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          retailer: RETAILERS[this.context.retailer]?.name || this.context.retailer,
-          orderId: this.context.orderId,
-        }),
+          retailer: this.context.retailer,
+          orderId: this.context.orderId
+        })
       });
-      const data = await res.json();
-      return data.url;
-    } catch (e) {
-      console.error('Return link error:', e);
-      return null;
-    }
+      if (res.ok) {
+        const data = await res.json();
+        return data.url;
+      }
+    } catch (e) { /* fallback */ }
+    return null;
   }
 
   // ============================================================
-  // CORE AGENT LOGIC (preserved from original)
+  // CREDIT CARD PROTECTION AWARENESS
   // ============================================================
+  _getCreditCardProtectionTip() {
+    return "However, your credit card may offer extended return protection. Visa, Mastercard, and Amex cards often extend returns by 60–90 days beyond the retailer's window. Check with your card issuer.";
+  }
 
+  _createCreditCardProtectionCard() {
+    const card = document.createElement('div');
+    card.className = 'cc-protection-tip';
+    card.innerHTML = `
+      <span class="cc-protection-tip-icon">💳</span>
+      <div class="cc-protection-tip-text">
+        <strong>Credit Card Return Protection</strong><br>
+        Many credit cards extend return windows by 60–90 days. Visa Signature, Mastercard World, and Amex cards commonly include this benefit. Contact your card issuer to check if you're covered.
+      </div>
+    `;
+    return card;
+  }
+
+  // ============================================================
+  // ORB & CONVERSATION START
+  // ============================================================
   _handleOrbClick() {
-    if (this.state === 'idle') {
-      this._startConversation();
+    if (this.speech.isListening) {
+      this.speech.stopListening();
       return;
     }
     if (this.speech.isSpeaking) {
       this.speech.stopSpeaking();
       return;
     }
-    if (this.speech.isListening) {
-      this.speech.stopListening();
-      return;
+
+    if (this.state === 'idle') {
+      this._startConversation();
+    } else {
+      this.speech.startListening();
     }
-    this.speech.startListening();
   }
 
   _handleSend() {
     const text = this.textInput.value.trim();
     if (!text) return;
     this.textInput.value = '';
-    // BUG 6 FIX: Stop speech when user types during agent speaking
-    if (this.speech.isSpeaking) {
-      this.speech.stopSpeaking();
-    }
+
     if (this.state === 'idle') {
       this._startConversation(text);
     } else {
@@ -1289,186 +1502,174 @@ class ReturnClawAgent {
   }
 
   async _startConversation(initialText) {
-    this.state = 'greeting';
     this.orbArea.classList.add('minimized');
+    if (this.orbReadyBadge) this.orbReadyBadge.style.display = 'none';
+    this.state = 'greeting';
 
-    // If already connected from a previous interaction, skip the gating flow
-    if (this.session.connectedOrders && this.session.email) {
-      const greeting = `Welcome back! I still have ${this.session.email} connected. What would you like to return?`;
-      this._addAgentMessage(greeting);
-      await this.speech.speak(greeting);
-      this.state = 'awaiting_item';
-      if (initialText) {
-        this._handleUserInput(initialText);
-      } else if (this.speech.hasRecognition) {
-        this.speech.startListening();
-      }
-      return;
-    }
+    // Wait for live mode detection
+    await liveModeReady;
 
-    // Proactive email gating: greet and immediately offer connection
-    const greeting = "Hi, I'm ReturnClaw. I help you return items from Amazon, Walmart, Target, and hundreds of other retailers. To get started, I'll need to connect to your email so I can find your orders.";
+    const greeting = isLiveMode
+      ? "Hi! I'm ReturnClaw, your AI returns assistant. I can help you return items from 20+ retailers. What would you like to return?"
+      : "Hi! I'm ReturnClaw, your AI returns assistant. I can help you return items from 20+ retailers. What would you like to return?";
+
     this._addAgentMessage(greeting);
     await this.speech.speak(greeting);
 
-    // If the user sent text with their orb click, check if it's a return intent first
-    if (initialText) {
-      const intent = parseIntent(initialText);
-      if (intent.intent === 'return' || intent.intent === 'policy_inquiry' || intent.intent === 'multi_return') {
-        // They know what they want — store intent context and still offer email
-        if (intent.retailer) this.context.retailer = intent.retailer;
-        if (intent.item) {
-          this.context.item = capitalizeItem(intent.item);
-          this.context.emoji = getItemEmoji(intent.item);
-        }
-      }
-    }
+    this.state = 'awaiting_item';
 
-    // Show the email connection card proactively
-    await this._delay(400);
-    await this._showProactiveEmailConnect();
+    if (initialText) {
+      await this._delay(200);
+      await this._handleUserInput(initialText);
+    } else {
+      await this._delay(400);
+      // Proactive: offer email connect
+      await this._showProactiveEmailConnect();
+    }
   }
 
-  // Proactive email connection gating — shown immediately after greeting
   async _showProactiveEmailConnect() {
-    const msg = "Would you like to connect your email?";
+    if (this.session.connectedOrders) return;
 
     const card = document.createElement('div');
     card.className = 'action-card';
+
+    // Demo mode banner
+    const demoNote = !isLiveMode ? '<div class="demo-banner">⚡ Demo Mode — Connect your email for real order data</div>' : '';
+
     card.innerHTML = `
       <div class="card-header">
         <div class="card-status-dot blue"></div>
-        <div class="card-title">Connect Your Email</div>
+        <div class="card-title">📧 Connect Your Email</div>
       </div>
-      <div class="card-btn-group">
-        <button class="gmail-btn" id="proactiveGmailBtn">
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Connect Gmail
-        </button>
-        <button class="outlook-btn" id="proactiveOutlookBtn">
-          <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="4" fill="white" fill-opacity="0"/>
-            <path d="M28 6v14h14V8c0-1.1-.9-2-2-2H28z" fill="#1490DF"/>
-            <path d="M28 28v14h12c1.1 0 2-.9 2-2V28H28z" fill="#1F6BF1"/>
-            <path d="M6 20h22v8H6z" fill="#28A8EA"/>
-            <path d="M6 28v10c0 1.1.9 2 2 2h20V28H6z" fill="#0078D4"/>
-            <path d="M6 8c0-1.1.9-2 2-2h20v14H6V8z" fill="#50D9FF"/>
-            <path d="M28 20h14v8H28z" fill="#0364B8"/>
-          </svg>
-          Connect Outlook
-        </button>
-        <button class="yahoo-btn" id="proactiveYahooBtn">
-          <span style="font-size:18px;">\u{1F4E7}</span>
-          Connect Yahoo
-        </button>
-        <button class="icloud-btn" id="proactiveIcloudBtn">
-          <span style="font-size:18px;">\u{1F4E7}</span>
-          Connect iCloud
-        </button>
-        <button class="other-btn" id="proactiveOtherBtn">
-          <span style="font-size:18px;">\u{1F4E7}</span>
-          Other Email
-        </button>
-        <button class="card-btn secondary" id="proactiveManualBtn">
-          <span class="card-btn-icon">\u270f\ufe0f</span>
-          Enter details manually
-        </button>
-      </div>
-      <div class="privacy-note">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Your credentials are secured with app-specific passwords \u2014 never stored by ReturnClaw.
+      <div class="card-body">
+        ${demoNote}
+        <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Connect your email so I can find your orders automatically. I only look at order confirmations — nothing else.</p>
+        <div class="card-btn-group">
+          ${isLiveMode ? `
+            <button class="gmail-btn" id="gmailConnectBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/></svg>
+              Sign in with Gmail
+            </button>
+          ` : `
+            <button class="gmail-btn" id="gmailDemoBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/></svg>
+              Try with Gmail (Demo)
+            </button>
+          `}
+          <button class="card-btn outline" id="manualEntryBtn">I'll type it manually</button>
+        </div>
+        <div class="privacy-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Read-only access. Your password is never stored. You can disconnect anytime.
+        </div>
       </div>
     `;
 
-    this._addAgentMessageWithCard(msg, card);
-    await this.speech.speak(msg);
-
-    this.state = 'awaiting_email_choice';
-
-    // BUG 2 FIX: Activate listening after email card is shown
-    this._startListeningAfterDelay();
+    this._addAgentMessageWithCard('', card);
 
     setTimeout(() => {
-      document.getElementById('proactiveGmailBtn')?.addEventListener('click', () => this._connectEmail('Gmail'));
-      document.getElementById('proactiveOutlookBtn')?.addEventListener('click', () => this._connectEmail('Outlook'));
-      document.getElementById('proactiveYahooBtn')?.addEventListener('click', () => this._connectEmail('Yahoo'));
-      document.getElementById('proactiveIcloudBtn')?.addEventListener('click', () => this._connectEmail('iCloud'));
-      document.getElementById('proactiveOtherBtn')?.addEventListener('click', () => this._connectEmail('Other'));
-      document.getElementById('proactiveManualBtn')?.addEventListener('click', () => this._startManualFlow());
-    }, 50);
+      if (isLiveMode) {
+        document.getElementById('gmailConnectBtn')?.addEventListener('click', async () => {
+          try {
+            const res = await fetch('/auth/google');
+            const data = await res.json();
+            this.sessionId = data.sessionId;
+            window.open(data.url, 'ReturnClaw OAuth', 'width=500,height=600,scrollbars=yes');
+          } catch (e) {
+            this._addAgentMessage("Sorry, I couldn't start the authentication process. Please try again.");
+          }
+        });
+      } else {
+        document.getElementById('gmailDemoBtn')?.addEventListener('click', () => {
+          this._showDemoEmailPrompt('gmail');
+        });
+      }
+      document.getElementById('manualEntryBtn')?.addEventListener('click', () => {
+        this._startManualFlow();
+      });
+    }, 100);
   }
 
-  // Manual flow: user doesn't want to connect email
   async _startManualFlow() {
-    const msg = "No problem! I can still help. What would you like to return? Tell me the retailer and item — for example, \"return my AirPods from Amazon.\"";
+    const msg = "No problem! Just tell me what you'd like to return. For example: \"Return my AirPods from Amazon\"";
     this._addAgentMessage(msg);
     await this.speech.speak(msg);
     this.state = 'awaiting_item';
     this._startListeningAfterDelay();
   }
 
-  // Demo mode: prompt user for their actual email before simulating connection
   _showDemoEmailPrompt(provider) {
-    const domainMap = {
-      'Gmail': 'gmail.com', 'Outlook': 'outlook.com', 'Yahoo': 'yahoo.com',
-      'iCloud': 'icloud.com', 'ProtonMail': 'protonmail.com', 'AOL': 'aol.com', 'Other': 'email.com'
-    };
-    const domain = domainMap[provider] || 'email.com';
-
     const card = document.createElement('div');
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
         <div class="card-status-dot blue"></div>
-        <div class="card-title">Connect ${provider}</div>
+        <div class="card-title">📧 Demo Email Connection</div>
       </div>
-      <div style="padding: 12px 16px; font-size: 13px; color: var(--text-secondary, #888);">
-        Enter your ${provider} email to get started.
-      </div>
-      <div style="padding: 0 16px 12px;">
-        <input type="email" class="card-input" id="demoEmailInput" placeholder="you@${domain}" autocomplete="email" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--border, #333); border-radius: 8px; background: var(--bg-secondary, #1a1a1a); color: var(--text-primary, #fff); font-size: 14px;">
-      </div>
-      <div style="padding: 0 16px 12px; display: flex; gap: 8px;">
-        <button class="card-input-btn" id="demoEmailSubmit" style="padding: 10px 20px; border-radius: 8px; background: var(--accent, #10b981); color: #fff; border: none; font-weight: 600; cursor: pointer; font-size: 14px;">Connect</button>
-      </div>
-      <div style="padding: 0 16px 12px; font-size: 11px; color: var(--text-tertiary, #666);">
-        🔒 Demo mode — no actual email access. In the live version, we use secure IMAP with app-specific passwords.
+      <div class="card-body">
+        <div class="demo-banner">⚡ Demo orders shown below — connect your email for real order data</div>
+        <div class="card-input-row">
+          <input type="email" class="card-input" id="demoEmailInput" placeholder="Enter your email address" autocomplete="email">
+          <button class="card-input-btn" id="demoEmailSubmit">Connect</button>
+        </div>
+        <div class="gmail-sim">
+          <div class="gmail-sim-logo">
+            <svg width="18" height="14" viewBox="0 0 24 18"><path d="M24 4.457v12.909c0 .904-.732 1.636-1.636 1.636h-3.819V10.73L12 15.64l-6.545-4.91v8.273H1.636A1.636 1.636 0 0 1 0 17.366V4.457c0-2.023 2.309-3.178 3.927-1.964L5.455 3.64 12 8.548l6.545-4.91 1.528-1.145C21.69 1.28 24 2.434 24 4.457z" fill="#EA4335"/></svg>
+            Gmail (Demo Mode)
+          </div>
+          <div class="gmail-sim-text">ReturnClaw would like to:</div>
+          <div class="gmail-sim-perms">
+            <div><span class="check">✓</span> View your email messages (read-only)</div>
+            <div><span class="check">✓</span> See your email address</div>
+          </div>
+        </div>
       </div>
     `;
-    this._addAgentMessageWithCard(`Connect your ${provider} account:`, card);
+
+    this._addAgentMessageWithCard('Enter your email to try the demo:', card);
 
     setTimeout(() => {
-      const input = document.getElementById('demoEmailInput');
-      const submit = document.getElementById('demoEmailSubmit');
-      if (input) input.focus();
-      const handleSubmit = () => {
-        const val = input?.value.trim();
-        if (val && val.includes('@')) {
-          this._simulateEmailConnect(provider, val);
-        } else if (val) {
-          // If they just typed a name, append the domain
-          this._simulateEmailConnect(provider, val + '@' + domain);
+      const submit = () => {
+        const emailVal = document.getElementById('demoEmailInput')?.value.trim();
+        if (emailVal && emailVal.includes('@')) {
+          this.session.email = emailVal;
+          this.session.emailProvider = provider === 'gmail' ? 'Gmail' : 'Outlook';
+          this.session.connectedOrders = true;
+          this.session.connectionType = 'demo';
+          this._handleDemoConnect(emailVal);
+        } else if (emailVal) {
+          this._addAgentMessage("That doesn't look like a valid email. Please enter a full email address like name@gmail.com.");
         }
       };
-      submit?.addEventListener('click', handleSubmit);
-      input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
+      document.getElementById('demoEmailSubmit')?.addEventListener('click', submit);
+      document.getElementById('demoEmailInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+      });
     }, 100);
   }
 
+  async _handleDemoConnect(email) {
+    await this._showTyping(1200);
+    const msg = `Connected to ${email}! (Demo mode — showing sample orders.) What would you like to return?`;
+    this._addAgentMessage(msg);
+    await this.speech.speak(msg);
+    this.state = 'awaiting_item';
+    this._startListeningAfterDelay();
+  }
+
+  // ============================================================
+  // MAIN INPUT HANDLER (state machine)
+  // ============================================================
   async _handleUserInput(text) {
-    this.speech.stopSpeaking();
-    this.speech.stopListening();
     this._addUserMessage(text);
+    this.speech.stopListening();
 
     const intent = parseIntent(text);
 
     switch (this.state) {
       case 'greeting':
+      case 'idle':
         await this._handleGreetingInterrupt(intent, text);
         break;
       case 'awaiting_item':
@@ -1480,18 +1681,17 @@ class ReturnClawAgent {
       case 'awaiting_retailer':
         await this._handleRetailerInput(intent, text);
         break;
-      case 'awaiting_return_confirm':
+      case 'confirm_return':
         await this._handleReturnConfirm(intent, text);
         break;
-      case 'identifying_email':
+      case 'awaiting_email_identify':
         await this._handleEmailIdentification(intent, text);
         break;
       case 'awaiting_email_choice':
         await this._handleEmailChoice(intent, text);
         break;
-      case 'scanning_orders':
-        break; // auto-driven
-      case 'selecting_order':
+      case 'select_order':
+      case 'select_real_order':
         await this._handleOrderSelection(intent, text);
         break;
       case 'awaiting_order_id':
@@ -1509,13 +1709,13 @@ class ReturnClawAgent {
       case 'awaiting_carrier_choice':
         await this._handleCarrierChoice(intent, text);
         break;
-      case 'confirming_address':
+      case 'awaiting_address':
         await this._handleAddressInput(intent, text);
         break;
-      case 'awaiting_address_confirm':
+      case 'confirm_address':
         await this._handleAddressConfirm(intent, text);
         break;
-      case 'awaiting_zipcode':
+      case 'awaiting_zip':
         await this._handleZipcode(intent, text);
         break;
       case 'awaiting_pickup_date':
@@ -1538,427 +1738,276 @@ class ReturnClawAgent {
     }
   }
 
-  // --- Domain Intent Response Handler (30+ intents) ---
-
+  // ============================================================
+  // DOMAIN INTENT RESPONSES
+  // ============================================================
   _getDomainIntentResponse(intent) {
-    const retailerName = intent.retailer ? (RETAILERS[intent.retailer]?.name || 'that retailer') : null;
-    const retailerContext = retailerName ? ` for ${retailerName}` : '';
-
+    const r = intent.retailer ? RETAILERS[intent.retailer] : (this.context.retailer ? RETAILERS[this.context.retailer] : null);
+    const rName = r ? r.name : 'the retailer';
     const responses = {
-      // PRE-RETURN
-      'return_eligibility': `I can check that for you! Which retailer was this from? Most retailers offer 30–90 day return windows, but it depends on the item category and your purchase date.${retailerName ? ` ${retailerName} typically offers a ${RETAILERS[intent.retailer]?.window || 30}-day window.` : ''}`,
-
-      'return_window': retailerName
-        ? `${retailerName} has a ${RETAILERS[intent.retailer]?.window || 30}-day return window for most items. Some categories like electronics may have shorter windows. When did you buy the item? I can calculate your exact deadline.`
-        : `Return windows vary by retailer — Amazon gives you 30 days, Walmart and Target give 90 days, and Costco is essentially unlimited. Which retailer did you buy from? I'll tell you exactly how many days you have left.`,
-
-      'restocking_fee': `Good question. Most major retailers like Amazon, Walmart, and Target don't charge restocking fees for standard returns. However, Best Buy charges up to 15% on opened electronics (unless you're a Totaltech member), and some third-party sellers on Amazon may charge restocking fees. What retailer and item are we talking about?`,
-
-      'packaging_requirements': `Requirements vary by retailer: Amazon generally doesn't require original packaging for most items. Target and Walmart prefer it but don't always require it. For electronics, most retailers want the original box with all accessories. What retailer and item are you returning?`,
-
-      'receipt_requirements': `Most online retailers don't need a physical receipt since your order is in their system. For in-store returns without a receipt: Walmart can look up purchases with the card you used, Target can find it with your phone number or RedCard, and Amazon has everything in your order history. Which retailer is this for?`,
-
-      'shipping_cost': retailerName
-        ? `${retailerName}: ${RETAILERS[intent.retailer]?.shipping || 'Return shipping policies vary'}. For defective items, most retailers cover shipping regardless.`
-        : `Amazon offers free returns on most items. Target gives free shipping with RedCard. Walmart offers free in-store returns. H&M charges $5.99 for mail returns. Which retailer are you returning to?`,
-
-      'exchange_policy': `Most retailers offer exchanges either online or in-store. If you want a different size or color, an exchange is often faster than a return + repurchase. Amazon, Target, and Walmart all support exchanges. Would you like me to walk you through an exchange?`,
-
-      'refund_options': `Typically you have three options: 1) Refund to your original payment method (3–5 business days after the return is received). 2) Store credit or gift card (often instant). 3) Exchange for a different item. Some retailers also offer promotional credit that's worth more than the refund. Which retailer is this for?`,
-
-      'gift_return': `Yes, you can return gifts! Most retailers will issue a store credit or gift card instead of refunding the original purchaser. You'll typically need either a gift receipt, the order number, or the packing slip. Amazon offers a specific "gift return" option. Which retailer was the gift from?`,
-
-      'open_item_return': `It depends on the retailer and category. Amazon accepts most opened items within 30 days. Target accepts gently used items within 90 days. For clothing that's been worn and washed, most retailers won't accept it. Cosmetics vary — Sephora accepts gently used products within 30 days. What item and retailer?`,
-
-      'non_returnable': `Common non-returnable items include: underwear/swimwear at most retailers, personalized/custom items, hazardous materials, digital content, grocery/perishables, and final-sale clearance items. Some electronics become non-returnable after activation. What item are you trying to return?`,
-
-      'in_store_return': `Many online orders can be returned in-store! Amazon returns are accepted at Whole Foods, Kohl's, and Amazon Hub locations. Target and Walmart accept online returns at any store. In-store returns are usually faster — you get your refund immediately. Which retailer?`,
-
-      'defective_item': `For defective items, you typically have extra protections: 1) Most retailers cover return shipping for defective products. 2) The return window may be extended or waived. 3) Manufacturer warranty may apply even after the return window closes. 4) Your credit card may offer purchase protection. What's defective and where did you buy it?`,
-
-      'late_return': `Even if you're past the return window, you may still have options: 1) Your credit card may offer purchase protection — most Visa, Mastercard, and Amex cards extend returns by 90 days. 2) You can try a goodwill request — I can draft an email to customer service for you. 3) If the item is defective, manufacturer warranty may apply regardless of the return window. Which would you like to explore?`,
-
-      // DURING RETURN
-      'how_to_start': `Here's how to start a return: 1) Tell me the item and retailer. 2) I'll check the return policy. 3) I'll generate your return link or label. 4) Choose drop-off or pickup. 5) Ship it and track your refund. Ready to start? Just tell me what you're returning!`,
-
-      'drop_off': `I can find drop-off locations near you! Common options include: The UPS Store, FedEx Office, Walgreens, Whole Foods (Amazon returns), and Kohl's (Amazon returns). What's your zip code? I'll find the closest locations.`,
-
-      'schedule_pickup': `I can schedule a home pickup! UPS, FedEx, and USPS all offer residential pickup services. UPS typically picks up next-day between 12–4 PM. Would you like me to set that up? I'll just need your address.`,
-
-      'label_help': `If you don't have a printer, no problem. Many carriers now offer QR code returns — just show the code on your phone at any UPS Store, FedEx Office, or Walgreens and they'll print it for you. Amazon also offers label-free, box-free returns at Whole Foods, Kohl's, and Amazon Hub locations. Which carrier are you using?`,
-
-      'packaging_help': `Here are packaging tips: 1) Use the original box if you have it. 2) If not, any sturdy box works — remove old labels. 3) Wrap items in bubble wrap or packing paper. 4) Fill empty space with crumpled paper. 5) Seal with packing tape (not duct tape). 6) Attach the return label on a flat surface. Need a label?`,
-
-      'carrier_recommendation': `Here's a quick comparison: UPS Ground is the most common for returns (reliable, many drop-off locations). FedEx is similar in speed and cost. USPS is often cheapest for smaller, lighter packages. For Amazon returns specifically, UPS is usually the default. What are you returning?`,
-
-      'multi_item': `Absolutely, you can return multiple items! If they're from the same retailer, you can often combine them in one box to save on shipping. If they're from different retailers, I'll create separate return labels for each. Ready to start? Tell me which items you'd like to return.`,
-
-      // POST-RETURN
-      'track_return': `I can help you track your return! If you have a tracking number, I can check the status. If you started the return through me, I should have it on file. Do you have a tracking number, or would you like me to look it up?`,
-
-      'refund_timeline': `Refund timing depends on the retailer and method: Amazon processes refunds within 3–5 days of receiving the item. Walmart takes 3–10 days. Store credit is usually instant once the return is scanned. Credit card refunds may take an additional billing cycle to appear. Which retailer are you waiting on?`,
-
-      'refund_missing': `I understand the frustration. Here's what to check: 1) Verify the return was delivered (check tracking). 2) Most retailers take 3–5 business days after receiving the item. 3) Credit card refunds may take an additional billing cycle. 4) Check if it was issued as store credit instead. If it's been more than 14 days, I'd recommend contacting the retailer directly. Would you like me to help draft a follow-up message?`,
-
-      'refund_discrepancy': `A partial refund could happen for a few reasons: 1) Restocking fee was applied. 2) Return shipping was deducted. 3) Item was received in different condition than expected. 4) Promotional discount was removed. I'd suggest contacting the retailer's customer service with your order number. Would you like me to help?`,
-
-      'return_rejected': `If your return was rejected, here are your options: 1) Review the rejection reason — sometimes it's a fixable issue. 2) Contact customer service to appeal. 3) Check if the item can be returned through a different method. 4) File a dispute with your credit card company if you believe the rejection is unfair. What happened?`,
+      return_eligibility: r ? `${r.name} has a ${r.window}-day return window. ${r.conditions[0]}. Would you like me to check a specific item?` : "I can check return eligibility once you tell me the retailer. Which store did you order from?",
+      return_window: r ? `${r.name}'s return window is ${r.window} days from delivery. ${r.conditions.join('. ')}.` : "I need to know the retailer to check the return window. Which store?",
+      restocking_fee: r ? `${r.name}: ${r.shipping}. Most items don't have a restocking fee unless noted in the conditions.` : "Restocking fees vary by retailer. Which store are you returning to?",
+      packaging_requirements: r ? `For ${r.name}: ${r.conditions[0]}. If you've lost the original box, most retailers still accept returns — just pack it safely.` : "Most retailers prefer original packaging but will accept items packed safely. Which retailer?",
+      receipt_requirements: "Most online orders have digital receipts in your email. I can find your order confirmation if you connect your email.",
+      shipping_cost: r ? `${r.name}: ${r.shipping}.` : "Return shipping costs vary by retailer. Which store?",
+      exchange_policy: r ? `${r.name} offers exchanges — you can select a different size or color during the return process. ${r.refund}.` : "Most retailers offer exchanges. Tell me which store and I'll get the details.",
+      refund_options: r ? `${r.name}: ${r.refund}. Options typically include original payment, store credit (often faster), or exchange.` : "Refund options vary. Which retailer are you returning to?",
+      gift_return: "For gift returns, you'll typically receive store credit instead of a refund to the original payment. Most retailers handle this — just select 'gift return' during the process.",
+      open_item_return: r ? `${r.name}: ${r.conditions.join('. ')}. Opened items may have different conditions but are usually accepted within the return window.` : "Most retailers accept opened items within the return window. Conditions vary — which retailer?",
+      non_returnable: "Some items like underwear, swimwear, personalized items, and digital downloads are typically non-returnable. Want me to check for a specific retailer?",
+      in_store_return: r ? `You can return to a ${r.name} store. ${r.dropoffs.join(', ')} accept returns. Bring the item and your order confirmation.` : "Most online purchases can be returned in-store. Which retailer?",
+      defective_item: r ? `For defective items at ${r.name}: ${r.defectiveNote}. I can start this return for you — just say the word.` : "Defective items usually get special treatment — free return shipping and sometimes extended windows. Which retailer?",
+      late_return: r ? `${r.name}'s standard window is ${r.window} days. ${this._getCreditCardProtectionTip()}` : `If you're past the return window, your credit card may help. ${this._getCreditCardProtectionTip()}`,
+      how_to_start: "Just tell me what you want to return and from which retailer. For example: 'Return my AirPods from Amazon'. I'll handle everything from there.",
+      drop_off: r ? `${r.name} drop-off options: ${r.dropoffs.join(', ')}. Want me to find the nearest location?` : "Tell me the retailer and I'll find drop-off locations near you.",
+      schedule_pickup: "I can schedule a carrier pickup at your address. Let's first set up your return, then we'll arrange the pickup.",
+      label_help: "Most retailers provide a free prepaid shipping label. I'll generate one for you during the return process. No printer? Many drop-off locations can print it for you — or use the QR code option.",
+      packaging_help: "Pack the item in its original box if possible. Use bubble wrap or packing paper for fragile items. Seal the box securely with tape. Then attach the return label on the outside.",
+      carrier_recommendation: r ? `For ${r.name} returns, these carriers are available: ${r.dropoffs.join(', ')}. UPS tends to have the most locations.` : "UPS and FedEx are the most common return carriers. I'll recommend the best option once we start your return.",
+      multi_item: "I can handle multi-item returns! Just say 'return everything from [retailer]' and I'll show you all your items to select from.",
+      track_return: "I can track your return. If you've completed a return through me, I'll show the tracking dashboard. Otherwise, check your email for tracking info from the retailer.",
+      refund_timeline: "Most refunds take 3–5 business days after the retailer receives the item. Store credit is usually instant. Some retailers take up to 10 days during busy periods.",
+      refund_missing: "If your refund is delayed, here's what to do: 1) Check the tracking — make sure the item was delivered to the return center. 2) Allow 5–10 business days from delivery. 3) Contact the retailer's customer service with your return tracking number.",
+      refund_discrepancy: "If you received a partial refund, it could be due to a restocking fee, return shipping deduction, or the item's condition. Check the retailer's return confirmation email for details.",
+      return_rejected: "If your return was rejected, common reasons include: past the return window, item not in acceptable condition, or missing components. Contact the retailer directly — they may offer store credit as an alternative."
     };
-
     return responses[intent.intent] || null;
   }
 
-  // Handle domain-specific questions that don't require a return flow
   async _handleDomainQuestion(intent) {
     const response = this._getDomainIntentResponse(intent);
     if (response) {
       this._addAgentMessage(response);
       await this.speech.speak(response);
-      this._startListeningAfterDelay();
-      return true;
-    }
-    return false;
-  }
 
-  // --- State Handlers ---
-
-  // BUG 1 FIX: Handle user input during greeting (before email card is shown)
-  async _handleGreetingInterrupt(intent, text) {
-    const lower = text.toLowerCase();
-    // If user mentions an email provider, treat as email choice
-    if (/gmail|google/i.test(lower)) {
-      // Stop greeting speech, jump to connecting Gmail
-      this.speech.stopSpeaking();
-      this.state = 'awaiting_email_choice';
-      await this._connectEmail('Gmail');
-      return;
-    }
-    if (/outlook|microsoft|hotmail|live\.com/i.test(lower)) {
-      this.speech.stopSpeaking();
-      this.state = 'awaiting_email_choice';
-      await this._connectEmail('Outlook');
-      return;
-    }
-    if (/yahoo/i.test(lower)) {
-      this.speech.stopSpeaking();
-      this.state = 'awaiting_email_choice';
-      await this._connectEmail('Yahoo');
-      return;
-    }
-    if (/icloud|apple mail/i.test(lower)) {
-      this.speech.stopSpeaking();
-      this.state = 'awaiting_email_choice';
-      await this._connectEmail('iCloud');
-      return;
-    }
-    if (/email|connect/i.test(lower)) {
-      // Generic email mention — let greeting finish and show card
-      return;
-    }
-    // If user states a return intent, store it and let greeting continue
-    if (intent.intent === 'return' || intent.intent === 'policy_inquiry' || intent.intent === 'multi_return') {
-      if (intent.retailer) this.context.retailer = intent.retailer;
-      if (intent.item) {
-        this.context.item = capitalizeItem(intent.item);
-        this.context.emoji = getItemEmoji(intent.item);
+      // If late return, show credit card protection card
+      if (intent.intent === 'late_return') {
+        this.chatArea.lastElementChild.appendChild(this._createCreditCardProtectionCard());
+        this._scrollToBottom();
       }
-      // Queue a note — the greeting will finish and show the email card
-      const ack = "Got it — I'll help with that right after we connect your email.";
-      this._addAgentMessage(ack);
-      return;
+
+      this._startListeningAfterDelay();
     }
-    // For anything else, queue it and let greeting complete
-    const ack = "I heard you! Let me finish getting set up and I'll help you right away.";
-    this._addAgentMessage(ack);
   }
 
+  async _handleGreetingInterrupt(intent, text) {
+    this.state = 'awaiting_item';
+    await this._handleAwaitingItem(intent, text);
+  }
+
+  // ============================================================
+  // AWAITING ITEM — Main entry point for return requests
+  // ============================================================
   async _handleAwaitingItem(intent, text) {
     if (intent.intent === 'multi_return') {
-      if (intent.retailer) {
-        this.context.retailer = intent.retailer;
-        await this._showMultiItemSelect();
-      } else {
-        // Need to identify retailer first
-        this.state = 'awaiting_retailer';
-        const msg = 'Which retailer do you want to return items from?';
+      this.context.retailer = intent.retailer;
+      await this._showMultiItemSelect();
+      return;
+    }
+
+    if (intent.intent === 'return' && intent.retailer) {
+      this.context.retailer = intent.retailer;
+      this.context.item = intent.item ? capitalizeItem(intent.item) : null;
+      this.context.emoji = getItemEmoji(intent.item);
+
+      if (!this.context.item) {
+        await this._showPolicyCheck();
+        return;
+      }
+
+      // Proactive: Ask about order date for return window check
+      const r = RETAILERS[this.context.retailer];
+      if (r && r.window <= 30) {
+        const msg = `Got it — returning ${this.context.emoji} ${this.context.item} from ${r.name}. Do you know approximately when you ordered it? This helps me check if it's still within the ${r.window}-day return window.`;
         this._addAgentMessage(msg);
         await this.speech.speak(msg);
-        this._startListeningAfterDelay();
+        this.state = 'confirm_return';
+      } else {
+        await this._showPolicyCheck();
       }
       return;
     }
 
-    if (intent.intent === 'return' && intent.retailer && intent.item) {
-      this.context.retailer = intent.retailer;
+    if (intent.intent === 'return' && intent.item && !intent.retailer) {
       this.context.item = capitalizeItem(intent.item);
       this.context.emoji = getItemEmoji(intent.item);
-      await this._showPolicyCheck();
-    } else if (intent.intent === 'return' && intent.retailer && !intent.item) {
-      this.context.retailer = intent.retailer;
-      const r = RETAILERS[intent.retailer];
-      this.state = 'awaiting_item_clarify';
-      const msg = `I can help with a return from ${r.name}. What item would you like to return?`;
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    } else if (intent.intent === 'return' && !intent.retailer && intent.item) {
-      // Vague item — try agentic search
       const matches = searchOrders(intent.item);
-      if (matches.length > 1) {
-        // Disambiguation
-        this.context.item = capitalizeItem(intent.item);
-        this.context.emoji = getItemEmoji(intent.item);
+      if (matches.length > 0) {
         await this._showAgenticSearch(matches, intent.item);
-      } else if (matches.length === 1) {
-        const match = matches[0];
-        this.context.retailer = match.retailer;
-        this.context.item = match.item;
-        this.context.emoji = match.emoji;
-        this.context.orderId = match.orderId;
-        this.context.price = match.price;
-        this.context.orderDate = getRecentDate(match.daysAgo);
-        await this._showPolicyCheck();
       } else {
-        this.context.item = capitalizeItem(intent.item);
-        this.context.emoji = getItemEmoji(intent.item);
-        this.state = 'awaiting_retailer';
-        const msg = `Got it — you want to return ${this.context.item}. Which retailer did you purchase it from?`;
+        const msg = `I'll help you return ${this.context.emoji} ${this.context.item}. Which retailer did you buy it from?`;
         this._addAgentMessage(msg);
         await this.speech.speak(msg);
-        this._startListeningAfterDelay();
+        this.state = 'awaiting_retailer';
       }
-    } else if (intent.intent === 'policy_inquiry' && intent.retailer) {
+      this._startListeningAfterDelay();
+      return;
+    }
+
+    if (intent.intent === 'policy_inquiry' && intent.retailer) {
       await this._showPolicyOnly(intent.retailer);
-    } else if (intent.intent === 'retailer_mention' && intent.retailer) {
+      return;
+    }
+
+    if (intent.intent === 'retailer_mention' && intent.retailer) {
+      // Contextual memory: if user says "actually, it was from Target not Amazon"
+      if (this.context.retailer && /actually|no wait|i meant|not .+|switch|change/i.test(text.toLowerCase())) {
+        const oldRetailer = RETAILERS[this.context.retailer]?.name || this.context.retailer;
+        this.context.retailer = intent.retailer;
+        const r = RETAILERS[intent.retailer];
+        const msg = `No problem — switching from ${oldRetailer} to ${r.name}. ${this.context.item ? `Let me check ${r.name}'s return policy for your ${this.context.item}.` : `What item would you like to return from ${r.name}?`}`;
+        this._addAgentMessage(msg);
+        await this.speech.speak(msg);
+        if (this.context.item) {
+          await this._delay(300);
+          await this._showPolicyCheck();
+        } else {
+          this.state = 'awaiting_item_clarify';
+          this._startListeningAfterDelay();
+        }
+        return;
+      }
+
       this.context.retailer = intent.retailer;
       const r = RETAILERS[intent.retailer];
+      const msg = `I can help with a ${r.name} return. What item would you like to return?`;
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
       this.state = 'awaiting_item_clarify';
-      const msg = `Sure, I can help with a return at ${r.name}. What item are you returning?`;
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
       this._startListeningAfterDelay();
-    } else if (intent.intent === 'greeting') {
-      const msg = "Hey! I'm here to help with returns. Just tell me what you'd like to return and where you bought it — for example, \"return my AirPods from Amazon.\"";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    } else if (intent.intent === 'help') {
-      const msg = "I can help you with anything related to returning an online purchase. Here's what I do: check return policies for any retailer, find your orders from your email, generate your return link, create shipping labels, find nearby drop-off locations, schedule carrier pickups, and track your return and refund. What would you like to do?";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    } else if (intent.intent === 'thanks') {
-      const msg = "You're welcome! Is there anything else I can help you with?";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    } else if (intent.intent === 'goodbye') {
-      const msg = "No problem! Come back anytime you need to make a return. Have a great day!";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-    } else if (this._getDomainIntentResponse(intent)) {
-      // Handle any of the 30+ domain-specific questions
+      return;
+    }
+
+    // Domain intents
+    if (this._getDomainIntentResponse(intent)) {
       await this._handleDomainQuestion(intent);
-    } else {
-      const retailerKey = findRetailer(text);
-      if (retailerKey) {
-        this.context.retailer = retailerKey;
-        const r = RETAILERS[retailerKey];
-        this.state = 'awaiting_item_clarify';
-        const msg = `I can help with a return at ${r.name}. What item would you like to return?`;
-        this._addAgentMessage(msg);
-        await this.speech.speak(msg);
-      } else {
-        // Try agentic search on the full text
-        const matches = searchOrders(text);
-        if (matches.length > 0) {
-          await this._showAgenticSearch(matches, text);
-        } else {
-          const msg = "I specialize in retail returns. You can say something like \"return my AirPods from Amazon\" or \"what's Walmart's return policy?\" — what would you like to do?";
-          this._addAgentMessage(msg);
-          await this.speech.speak(msg);
-        }
-      }
+      return;
+    }
+
+    if (intent.intent === 'greeting') {
+      const msg = "Hey! Tell me what you'd like to return, or ask about a return policy. For example: 'Return my AirPods from Amazon'.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
       this._startListeningAfterDelay();
-    }
-  }
-
-  // ---- Agentic Search ----
-  async _showAgenticSearch(matches, query) {
-    const msg = `I found ${matches.length > 1 ? 'a few items' : 'an item'} matching "${query}" in your recent orders. Which one?`;
-    this._addAgentMessage(msg);
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    let html = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">Matching Orders</div>
-      </div>
-      <div class="order-select-list">
-    `;
-
-    matches.forEach((order, idx) => {
-      const r = RETAILERS[order.retailer];
-      const dateStr = formatMonthDay(getRecentDate(order.daysAgo));
-      html += `
-        <div class="order-select-item" data-order-idx="${idx}">
-          <div class="order-thumb">${order.emoji}</div>
-          <div class="order-info">
-            <div class="order-item-name">${order.item}</div>
-            <div class="order-meta">${r.name} — ${dateStr} · $${order.price.toFixed(2)}</div>
-          </div>
-          <span class="select-indicator">Select →</span>
-        </div>
-      `;
-    });
-
-    html += '</div>';
-    card.innerHTML = html;
-    this._addAgentMessageWithCard('', card);
-    await this.speech.speak(msg);
-
-    this._searchMatches = matches;
-    this.state = 'selecting_order';
-
-    setTimeout(() => {
-      card.querySelectorAll('.order-select-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const idx = parseInt(el.dataset.orderIdx);
-          this._selectSearchResult(idx);
-        });
-      });
-    }, 50);
-  }
-
-  async _selectSearchResult(idx) {
-    const order = this._searchMatches[idx];
-    this.context.retailer = order.retailer;
-    this.context.item = order.item;
-    this.context.emoji = order.emoji;
-    this.context.orderId = order.orderId;
-    this.context.price = order.price;
-    this.context.orderDate = getRecentDate(order.daysAgo);
-    await this._showPolicyCheck();
-  }
-
-  async _handleOrderSelection(intent, text) {
-    // Try to match by number or name — check real orders first
-    if (this._realOrders) {
-      const lower = text.toLowerCase();
-      for (let i = 0; i < this._realOrders.length; i++) {
-        const order = this._realOrders[i];
-        const itemName = (order.items && order.items[0]) || order.subject || '';
-        if (lower.includes(itemName.toLowerCase()) ||
-            (order.retailer && lower.includes(order.retailer.toLowerCase())) ||
-            lower === String(i + 1) ||
-            (lower.includes('first') && i === 0) ||
-            (lower.includes('second') && i === 1) ||
-            (lower.includes('last') && i === this._realOrders.length - 1)) {
-          await this._selectRealOrder(i);
-          return;
-        }
-      }
+      return;
     }
 
-    // Then check mock search matches
-    if (this._searchMatches) {
-      const lower = text.toLowerCase();
-      for (let i = 0; i < this._searchMatches.length; i++) {
-        const order = this._searchMatches[i];
-        if (lower.includes(order.item.toLowerCase()) ||
-            lower.includes(RETAILERS[order.retailer].name.toLowerCase()) ||
-            lower === String(i + 1) ||
-            lower.includes('first') && i === 0 ||
-            lower.includes('second') && i === 1 ||
-            lower.includes('last') && i === this._searchMatches.length - 1) {
-          await this._selectSearchResult(i);
-          return;
-        }
-      }
+    if (intent.intent === 'thanks') {
+      const msg = "You're welcome! What would you like to return?";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+      return;
     }
 
-    // Then check found orders (mock)
-    if (this._foundOrders) {
-      const lower = text.toLowerCase();
-      for (let i = 0; i < this._foundOrders.length; i++) {
-        const order = this._foundOrders[i];
-        if (lower.includes(order.item.toLowerCase()) ||
-            lower.includes(RETAILERS[order.retailer].name.toLowerCase()) ||
-            lower === String(i + 1) ||
-            (lower.includes('first') && i === 0) ||
-            (lower.includes('second') && i === 1) ||
-            (lower.includes('last') && i === this._foundOrders.length - 1)) {
-          await this._selectFoundOrder(i);
-          return;
-        }
-      }
+    if (intent.intent === 'goodbye') {
+      const msg = "See you next time! Come back whenever you need to make a return.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      return;
     }
 
-    const msg = "Please select one of the orders shown above, or describe it more specifically.";
+    if (intent.intent === 'help') {
+      const msg = "I'm ReturnClaw — I help you return items from 20+ retailers. Just tell me what you want to return and from where. I'll check the policy, generate a shipping label, find drop-off locations, and track your refund. Try saying 'Return my AirPods from Amazon'.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+      return;
+    }
+
+    // Fallback
+    const msg = "I'm here to help with returns! Tell me what you'd like to return and from which retailer. For example: \"Return my headphones from Amazon\".";
     this._addAgentMessage(msg);
     await this.speech.speak(msg);
     this._startListeningAfterDelay();
   }
 
   async _handleItemClarify(intent, text) {
-    const item = cleanItem(text.replace(/^(my |the |a |an )/i, ''));
-    this.context.item = capitalizeItem(item);
-    this.context.emoji = getItemEmoji(item);
-    await this._showPolicyCheck();
-  }
-
-  async _handleRetailerInput(intent, text) {
-    const retailerKey = findRetailer(text);
-    if (retailerKey) {
-      this.context.retailer = retailerKey;
-      if (intent.intent === 'multi_return' || this.multiItems.length > 0) {
-        await this._showMultiItemSelect();
-      } else {
-        await this._showPolicyCheck();
-      }
+    if (intent.intent === 'return' && intent.item) {
+      this.context.item = capitalizeItem(intent.item);
+      this.context.emoji = getItemEmoji(intent.item);
+      if (intent.retailer) this.context.retailer = intent.retailer;
+      await this._showPolicyCheck();
+    } else if (intent.intent !== 'yes' && intent.intent !== 'no' && text.length > 1) {
+      this.context.item = capitalizeItem(text);
+      this.context.emoji = getItemEmoji(text);
+      await this._showPolicyCheck();
     } else {
-      const retailerText = text.trim();
-      const msg = `I don't have ${retailerText} in my database yet, but here's what I'd suggest: most retailers have a return page on their website — search for "${retailerText} returns" and look for a link in your order confirmation email. I'm adding new retailers every week! In the meantime, I can help with Amazon, Walmart, Target, Best Buy, Apple, Nike, Costco, Nordstrom, Zara, Home Depot, Sephora, Macy's, Gap, and H&M.`;
+      const msg = "What item would you like to return?";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
       this._startListeningAfterDelay();
     }
   }
 
-  // ---- Policy Check ----
+  async _handleRetailerInput(intent, text) {
+    const retailerKey = intent.retailer || findRetailer(text);
+    if (retailerKey) {
+      // Contextual memory: switching retailers gracefully
+      if (this.context.retailer && retailerKey !== this.context.retailer) {
+        const oldName = RETAILERS[this.context.retailer]?.name || '';
+        if (oldName) {
+          const msg = `Switching from ${oldName} to ${RETAILERS[retailerKey].name}. Let me check their policy.`;
+          this._addAgentMessage(msg);
+        }
+      }
+      this.context.retailer = retailerKey;
+      await this._showPolicyCheck();
+    } else {
+      const msg = "I didn't recognize that retailer. Try Amazon, Walmart, Target, Nike, Apple, or another major retailer.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+    }
+  }
+
+  // ============================================================
+  // POLICY CHECK
+  // ============================================================
   async _showPolicyCheck() {
     const r = RETAILERS[this.context.retailer];
-    this.context.daysRemaining = getDaysRemaining(this.context.retailer);
+    if (!r) return;
 
-    this.pipeline.classList.add('visible');
     this._setPipelineStep('triage', 'done');
     this._setPipelineStep('policy', 'active');
+    this.pipeline.classList.add('visible');
 
-    const triageMsg = `Got it — you want to return ${this.context.item} from ${r.name}. Let me check the return policy.`;
-    this._addAgentMessage(triageMsg);
-    await this.speech.speak(triageMsg);
+    await this._showTyping(1200);
 
-    await this._showTyping(1500);
-
-    this._setPipelineStep('policy', 'done');
-    this._setPipelineStep('execution', 'active');
-
+    this.context.daysRemaining = getDaysRemaining(this.context.retailer);
     const policyCard = this._createPolicyCard(r, true);
-    const policyMsg = `Good news — your ${this.context.item} is eligible for return. ${r.name} gives you ${r.window} days, and you have ${this.context.daysRemaining} days left. ${r.shipping}. Would you like me to start the return?`;
 
-    this._addAgentMessageWithCard(policyMsg, policyCard);
-    await this.speech.speak(policyMsg);
+    let msg;
+    if (this.context.item) {
+      msg = `${r.name} has a ${r.window}-day return window. ${r.shipping}. You have about ${this.context.daysRemaining} days left. Would you like me to start the return for your ${this.context.item}?`;
+    } else {
+      msg = `${r.name} has a ${r.window}-day return window. ${r.shipping}. What item would you like to return?`;
+    }
 
-    this.state = 'awaiting_return_confirm';
+    this._addAgentMessageWithCard(msg, policyCard);
+    await this.speech.speak(msg);
+    this._setPipelineStep('policy', 'done');
+
+    if (this.context.item) {
+      this.state = 'confirm_return';
+    } else {
+      this.state = 'awaiting_item_clarify';
+    }
     this._startListeningAfterDelay();
   }
 
   async _showPolicyOnly(retailerKey) {
     const r = RETAILERS[retailerKey];
-    const card = this._createPolicyCard(r, false);
-    const msg = `Here's ${r.name}'s return policy: You have ${r.window} days to return items. ${r.shipping}. ${r.refund}. Would you like to start a return from ${r.name}?`;
-    this._addAgentMessageWithCard(msg, card);
+    if (!r) {
+      const msg = "I don't have policy data for that retailer yet. Try Amazon, Walmart, Target, Nike, or another major retailer.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      return;
+    }
+    const policyCard = this._createPolicyCard(r, true);
+    const msg = `${r.name}: ${r.window}-day return window. ${r.shipping}. ${r.conditions.join('. ')}. Would you like to start a return?`;
+    this._addAgentMessageWithCard(msg, policyCard);
     await this.speech.speak(msg);
     this.state = 'awaiting_item';
     this._startListeningAfterDelay();
@@ -1969,42 +2018,103 @@ class ReturnClawAgent {
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
-        <div class="card-status-dot ${eligible ? 'green' : 'yellow'}"></div>
-        <div class="card-title">${eligible ? 'Eligible for Return' : 'Return Policy'}</div>
+        <div class="card-status-dot ${eligible ? 'green' : 'red'}"></div>
+        <div class="card-title">${retailer.icon} ${retailer.name} Return Policy</div>
       </div>
       <div class="card-body">
-        <div class="card-row">
-          <span class="card-row-label">Retailer</span>
-          <span class="card-row-value">${retailer.name}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-row-label">Return Window</span>
-          <span class="card-row-value">${retailer.window} days</span>
-        </div>
-        ${eligible && this.context.daysRemaining ? `<div class="card-row">
-          <span class="card-row-label">Days Remaining</span>
-          <span class="card-row-value" style="color: var(--accent)">${this.context.daysRemaining} days</span>
-        </div>` : ''}
-        <div class="card-row">
-          <span class="card-row-label">Shipping</span>
-          <span class="card-row-value">${retailer.shipping}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-row-label">Refund</span>
-          <span class="card-row-value">${retailer.refund}</span>
-        </div>
+        <div class="card-row"><span class="card-row-label">Return Window</span><span class="card-row-value">${retailer.window > 0 ? retailer.window + ' days' : 'Flexible'}</span></div>
+        <div class="card-row"><span class="card-row-label">Free Returns</span><span class="card-row-value">${retailer.shipping}</span></div>
+        <div class="card-row"><span class="card-row-label">Refund</span><span class="card-row-value">${retailer.refund}</span></div>
+        ${this.context.daysRemaining ? `<div class="card-row"><span class="card-row-label">Days Left</span><span class="card-row-value" style="color: ${this.context.daysRemaining > 7 ? 'var(--accent)' : 'var(--red)'}">${this.context.daysRemaining} days</span></div>` : ''}
         <div class="card-divider"></div>
         <div class="card-conditions">
           <div class="card-conditions-title">Conditions</div>
-          <ul>${retailer.conditions.map(c => `<li>${c}</li>`).join('')}</ul>
+          <ul>
+            ${retailer.conditions.map(c => `<li>${c}</li>`).join('')}
+          </ul>
         </div>
       </div>
     `;
     return card;
   }
 
+  // ============================================================
+  // AGENTIC ORDER SEARCH (when user says "return my shoes" without retailer)
+  // ============================================================
+  async _showAgenticSearch(matches, searchTerm) {
+    await this._showTyping(800);
+
+    // In demo mode, show banner
+    const demoNote = !isLiveMode && !this.session.connectedOrders ? '<div class="demo-banner">⚡ Demo orders shown — connect your email for real order data</div>' : '';
+
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    let html = `
+      <div class="card-header">
+        <div class="card-status-dot green"></div>
+        <div class="card-title">🔍 I found matching orders</div>
+      </div>
+      <div class="card-body">
+        ${demoNote}
+        <div class="order-select-list">
+    `;
+    matches.forEach((order, idx) => {
+      const r = RETAILERS[order.retailer];
+      const dateStr = formatDate(getRecentDate(order.daysAgo));
+      html += `
+        <div class="order-select-item" data-idx="${idx}">
+          <div class="order-thumb">${order.emoji}</div>
+          <div class="order-info">
+            <div class="order-item-name">${order.item}</div>
+            <div class="order-meta">${r.name} · $${order.price.toFixed(2)} · ${dateStr}</div>
+          </div>
+          <div class="select-indicator"></div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+    card.innerHTML = html;
+
+    const msg = `I found ${matches.length} recent order${matches.length > 1 ? 's' : ''} matching "${searchTerm}". Which one?`;
+    this._addAgentMessageWithCard(msg, card);
+    await this.speech.speak(msg);
+
+    this._searchMatches = matches;
+    this.state = 'select_order';
+
+    setTimeout(() => {
+      card.querySelectorAll('.order-select-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const idx = parseInt(item.dataset.idx);
+          this._selectSearchMatch(idx);
+        });
+      });
+    }, 100);
+  }
+
+  async _selectSearchMatch(idx) {
+    const match = this._searchMatches[idx];
+    if (!match) return;
+    this.context.retailer = match.retailer;
+    this.context.item = match.item;
+    this.context.emoji = match.emoji;
+    this.context.orderId = match.orderId;
+    this.context.price = match.price;
+    this.context.orderDate = getRecentDate(match.daysAgo);
+    await this._showPolicyCheck();
+  }
+
+  async _showFoundOrders() {
+    if (this._realOrders && this._realOrders.length > 0) {
+      await this._displayRealOrders(this._realOrders);
+    }
+  }
+
+  // ============================================================
+  // RETURN CONFIRM
+  // ============================================================
   async _handleReturnConfirm(intent, text) {
-    if (intent.intent === 'yes' || /yes|yeah|sure|ok|go|start|do it|let's|please/i.test(text.toLowerCase())) {
+    if (intent.intent === 'yes' || /yes|yeah|sure|ok|go|start|do it|let's|please|go for it|proceed|make it happen|sounds good|perfect|let's do this|you bet|alright/i.test(text.toLowerCase())) {
       await this._showReasonSelector();
     } else if (intent.intent === 'no') {
       const msg = "No problem! Is there anything else I can help you with?";
@@ -2014,6 +2124,7 @@ class ReturnClawAgent {
       this._resetContext();
       this._startListeningAfterDelay();
     } else {
+      // Could be a date or additional info
       const msg = "Would you like me to start the return process? Just say yes or no.";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
@@ -2035,7 +2146,7 @@ class ReturnClawAgent {
       <div class="reason-grid">
     `;
     RETURN_REASONS.forEach(reason => {
-      html += `<button class="reason-btn" data-reason="${reason.id}">
+      html += `<button class="reason-btn" data-reason="${reason.id}" aria-label="Return reason: ${reason.label}">
         <span class="reason-icon">${reason.icon}</span>
         ${reason.label}
       </button>`;
@@ -2047,647 +2158,84 @@ class ReturnClawAgent {
     await this.speech.speak(msg);
     this.state = 'selecting_reason';
 
+    this._setPipelineStep('execution', 'active');
+
     setTimeout(() => {
       card.querySelectorAll('.reason-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          this._selectReason(btn.dataset.reason);
+          const reasonId = btn.dataset.reason;
+          const reason = RETURN_REASONS.find(r => r.id === reasonId);
+          if (reason) {
+            btn.classList.add('selected');
+            this.context.returnReason = reason;
+            this._handleReasonSelected(reason);
+          }
         });
       });
-    }, 50);
+    }, 100);
   }
 
-  async _selectReason(reasonId) {
-    const reason = RETURN_REASONS.find(r => r.id === reasonId);
-    this.context.returnReason = reason;
-
-    // Highlight selected
-    document.querySelectorAll('.reason-btn').forEach(btn => {
-      btn.classList.toggle('selected', btn.dataset.reason === reasonId);
-    });
-
-    const r = RETAILERS[this.context.retailer];
-
-    if (reasonId === 'defective') {
-      const msg = `Noted — item is defective. ${r.defectiveNote}. This may also qualify for an exchange or replacement. Let me find your order.`;
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-    } else {
-      const reasonLabel = reason.label.toLowerCase();
-      const msg = `Got it — ${reasonLabel}. Let me find your order so we can process this return.`;
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-    }
-
-    await this._delay(400);
-
-    // Check if we already have order info (from agentic search)
-    if (this.context.orderId && this.context.price) {
-      await this._showRefundOptions();
-    } else {
-      await this._showEmailIdentification();
-    }
+  async _handleReasonSelected(reason) {
+    await this._delay(200);
+    await this._showRefundOptions(reason);
   }
 
   async _handleReasonSelection(intent, text) {
+    // Try to match text to a reason
     const lower = text.toLowerCase();
-    // Try to match reason by text
-    const reasonMap = {
-      'changed': 'changed_mind', 'mind': 'changed_mind',
-      'defective': 'defective', 'broken': 'defective', 'doesn\'t work': 'defective', 'not working': 'defective',
-      'wrong': 'wrong_item', 'wrong item': 'wrong_item',
-      'description': 'not_as_described', 'doesn\'t match': 'not_as_described', 'not as described': 'not_as_described',
-      'late': 'arrived_late', 'too late': 'arrived_late',
-      'price': 'better_price', 'cheaper': 'better_price',
-      'other': 'other'
-    };
-
-    for (const [keyword, reasonId] of Object.entries(reasonMap)) {
-      if (lower.includes(keyword)) {
-        await this._selectReason(reasonId);
-        return;
-      }
-    }
-
-    // Default to "changed my mind"
-    await this._selectReason('changed_mind');
-  }
-
-  // ---- Email Identification (UPGRADED with real OAuth) ----
-  async _showEmailIdentification() {
-    // If already connected, skip
-    if (this.session.connectedOrders) {
-      await this._showFoundOrders();
-      return;
-    }
-
-    const msg = "Which email should I scan for your orders?";
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">Connect Your Email</div>
-      </div>
-      <div class="card-btn-group">
-        <button class="gmail-btn" id="connectGmailBtn2">
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Connect Gmail
-        </button>
-        <button class="outlook-btn" id="connectOutlookBtn">
-          <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="4" fill="white" fill-opacity="0"/>
-            <path d="M28 6v14h14V8c0-1.1-.9-2-2-2H28z" fill="#1490DF"/>
-            <path d="M28 28v14h12c1.1 0 2-.9 2-2V28H28z" fill="#1F6BF1"/>
-            <path d="M6 20h22v8H6z" fill="#28A8EA"/>
-            <path d="M6 28v10c0 1.1.9 2 2 2h20V28H6z" fill="#0078D4"/>
-            <path d="M6 8c0-1.1.9-2 2-2h20v14H6V8z" fill="#50D9FF"/>
-            <path d="M28 20h14v8H28z" fill="#0364B8"/>
-          </svg>
-          Connect Outlook
-        </button>
-        <button class="card-btn secondary" id="enterEmailManually">
-          <span class="card-btn-icon">✏️</span>
-          Enter email manually
-        </button>
-        <button class="card-btn outline" id="enterOrderIdBtn2">
-          <span class="card-btn-icon">🔢</span>
-          Enter Order ID instead
-        </button>
-      </div>
-      <div class="privacy-note">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Your credentials are secured with app-specific passwords — never stored by ReturnClaw.
-      </div>
-    `;
-
-    this._addAgentMessageWithCard(msg, card);
-    await this.speech.speak(msg);
-
-    this.state = 'identifying_email';
-
-    setTimeout(() => {
-      document.getElementById('connectGmailBtn2')?.addEventListener('click', () => this._connectEmail('Gmail'));
-      document.getElementById('connectOutlookBtn')?.addEventListener('click', () => this._connectEmail('Outlook'));
-      document.getElementById('enterEmailManually')?.addEventListener('click', () => this._showManualEmailInput());
-      document.getElementById('enterOrderIdBtn2')?.addEventListener('click', () => this._showOrderIdInput());
-    }, 50);
-  }
-
-  // ---- Email Connection (DUAL MODE) ----
-  async _connectEmail(provider) {
-    if (isLiveMode) {
-      // Show IMAP email + app password form for all providers
-      this._showImapConnectForm(provider);
-      return;
-    }
-
-    // DEMO MODE: Ask user for their email before simulating connect
-    this._showDemoEmailPrompt(provider);
-  }
-
-  // ---- IMAP Connect Form ----
-  _showImapConnectForm(provider) {
-    const providerKey = {
-      'Gmail': 'gmail', 'Outlook': 'outlook', 'Yahoo': 'yahoo',
-      'iCloud': 'icloud', 'ProtonMail': 'protonmail', 'AOL': 'aol'
-    }[provider] || 'gmail';
-
-    const providerDomains = {
-      'Gmail': 'gmail.com', 'Outlook': 'outlook.com', 'Yahoo': 'yahoo.com',
-      'iCloud': 'icloud.com', 'ProtonMail': 'protonmail.com', 'AOL': 'aol.com'
-    };
-    const defaultDomain = providerDomains[provider] || '';
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">Connect ${provider}</div>
-      </div>
-      <div style="padding: 12px 16px; font-size: 13px; color: var(--text-secondary, #888);">
-        Enter your email and an <strong>app-specific password</strong> (not your regular password).
-      </div>
-      <div style="padding: 0 16px 8px;">
-        <input type="email" class="card-input" id="imapEmailInput" placeholder="you@${defaultDomain || 'email.com'}" autocomplete="email" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--border, #333); border-radius: 8px; background: var(--bg-secondary, #1a1a1a); color: var(--text-primary, #fff); font-size: 14px;">
-        <input type="password" class="card-input" id="imapPasswordInput" placeholder="App password" autocomplete="current-password" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--border, #333); border-radius: 8px; background: var(--bg-secondary, #1a1a1a); color: var(--text-primary, #fff); font-size: 14px;">
-      </div>
-      <div style="padding: 0 16px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <button class="card-input-btn" id="imapConnectBtn" style="padding: 10px 20px; border-radius: 8px; background: var(--accent, #ff6b35); color: #fff; border: none; font-weight: 600; cursor: pointer; font-size: 14px;">Connect</button>
-        <a href="#" id="imapHelpLink" style="font-size: 12px; color: var(--accent, #ff6b35); text-decoration: none;">How to get an app password</a>
-      </div>
-      <div id="imapHelpPanel" style="display: none; padding: 0 16px 12px;">
-        <div style="background: var(--bg-secondary, #1a1a1a); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--text-secondary, #aaa);">
-          <div id="imapHelpContent">Loading instructions...</div>
-        </div>
-      </div>
-      <div id="imapError" style="display: none; padding: 0 16px 12px; color: #ff4444; font-size: 13px;"></div>
-      <div id="imapSpinner" style="display: none; padding: 0 16px 12px; font-size: 13px; color: var(--text-secondary, #aaa);">
-        <div class="spinner" style="display: inline-block; width: 14px; height: 14px; border: 2px solid #555; border-top-color: var(--accent, #ff6b35); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px;"></div>
-        Connecting securely...
-      </div>
-      <div style="padding: 0 16px 12px; font-size: 11px; color: var(--text-tertiary, #666);">
-        🔒 Your app password is encrypted in transit and stored only in memory for this session.
-      </div>
-    `;
-
-    this._addAgentMessageWithCard(`Connect your ${provider} account:`, card);
-
-    setTimeout(() => {
-      const emailInput = document.getElementById('imapEmailInput');
-      const passwordInput = document.getElementById('imapPasswordInput');
-      const connectBtn = document.getElementById('imapConnectBtn');
-      const helpLink = document.getElementById('imapHelpLink');
-      const helpPanel = document.getElementById('imapHelpPanel');
-      const helpContent = document.getElementById('imapHelpContent');
-      const errorDiv = document.getElementById('imapError');
-      const spinnerDiv = document.getElementById('imapSpinner');
-
-      if (emailInput) emailInput.focus();
-
-      // Load instructions on help link click
-      helpLink?.addEventListener('click', async (e) => {
-        e.preventDefault();
-        helpPanel.style.display = helpPanel.style.display === 'none' ? 'block' : 'none';
-        if (helpPanel.style.display === 'block' && helpContent.textContent === 'Loading instructions...') {
-          try {
-            const res = await fetch(`/auth/imap/instructions/${providerKey}`);
-            const data = await res.json();
-            let html = `<strong>${data.provider} App Password</strong><ol style="margin: 8px 0; padding-left: 20px;">`;
-            data.steps.forEach(step => { html += `<li style="margin: 4px 0;">${step}</li>`; });
-            html += '</ol>';
-            if (data.url) html += `<a href="${data.url}" target="_blank" rel="noopener" style="color: var(--accent, #ff6b35);">${data.url}</a><br>`;
-            if (data.note) html += `<em style="font-size: 11px;">${data.note}</em>`;
-            helpContent.innerHTML = html;
-          } catch (err) {
-            helpContent.textContent = 'Check your email provider settings for "App Passwords".';
-          }
-        }
-      });
-
-      // Connect button handler
-      const handleConnect = async () => {
-        const email = emailInput?.value.trim();
-        const password = passwordInput?.value.trim();
-
-        if (!email || !email.includes('@')) {
-          errorDiv.style.display = 'block';
-          errorDiv.textContent = 'Please enter a valid email address.';
-          return;
-        }
-        if (!password) {
-          errorDiv.style.display = 'block';
-          errorDiv.textContent = 'Please enter your app password.';
-          return;
-        }
-
-        errorDiv.style.display = 'none';
-        spinnerDiv.style.display = 'block';
-        connectBtn.disabled = true;
-        connectBtn.textContent = 'Connecting...';
-
-        try {
-          const res = await fetch('/auth/imap/connect', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, sessionId: this.sessionId || undefined }),
-          });
-          const data = await res.json();
-
-          if (data.success) {
-            spinnerDiv.style.display = 'none';
-            this.sessionId = data.sessionId;
-            this.session.email = data.email;
-            this.session.emailProvider = provider;
-            this.session.connectedOrders = true;
-            this.session.connectionType = 'imap';
-
-            const msg = `Connected to ${data.email}! Scanning for recent orders...`;
-            this._addAgentMessage(msg);
-            await this.speech.speak(msg);
-
-            await this._showTyping(1800);
-            await this._searchRealOrders();
-          } else {
-            spinnerDiv.style.display = 'none';
-            connectBtn.disabled = false;
-            connectBtn.textContent = 'Connect';
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = data.error || 'Connection failed. Please check your credentials.';
-          }
-        } catch (err) {
-          spinnerDiv.style.display = 'none';
-          connectBtn.disabled = false;
-          connectBtn.textContent = 'Connect';
-          errorDiv.style.display = 'block';
-          errorDiv.textContent = 'Connection failed. Please check your internet connection and try again.';
-        }
-      };
-
-      connectBtn?.addEventListener('click', handleConnect);
-      passwordInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleConnect(); });
-    }, 100);
-  }
-
-  async _showManualEmailInput() {
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">Enter Your Email</div>
-      </div>
-      <div class="card-input-row">
-        <input type="email" class="card-input" id="manualEmailInput" placeholder="your@email.com" autocomplete="email">
-        <button class="card-input-btn" id="manualEmailSubmit">Connect</button>
-      </div>
-    `;
-    this._addAgentMessageWithCard('Enter the email associated with your orders:', card);
-
-    setTimeout(() => {
-      const input = document.getElementById('manualEmailInput');
-      const submit = document.getElementById('manualEmailSubmit');
-      if (input) input.focus();
-      const handleSubmit = () => {
-        const val = input.value.trim();
-        if (val && val.includes('@')) {
-          this._simulateEmailConnect('Email', val);
-        }
-      };
-      submit?.addEventListener('click', handleSubmit);
-      input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
-    }, 100);
-  }
-
-  async _handleEmailIdentification(intent, text) {
-    const lower = text.toLowerCase();
-    // Check provider keywords first (same fix as _handleEmailChoice)
-    if (lower.includes('gmail') || lower.includes('google') || /g\s*mail/i.test(lower)) {
-      await this._connectEmail('Gmail');
-    } else if (lower.includes('outlook') || lower.includes('microsoft') || lower.includes('hotmail') || lower.includes('live.com')) {
-      await this._connectEmail('Outlook');
-    } else if (lower.includes('yahoo')) {
-      await this._connectEmail('Yahoo');
-    } else if (lower.includes('icloud') || lower.includes('apple mail')) {
-      await this._connectEmail('iCloud');
-    } else if (lower.includes('proton') || lower.includes('protonmail')) {
-      await this._connectEmail('ProtonMail');
-    } else if (lower.includes('aol')) {
-      await this._connectEmail('AOL');
-    } else if (lower.includes('order') || lower.includes('manual') || lower.includes('id')) {
-      this._showOrderIdInput();
-    } else if (text.includes('@')) {
-      await this._simulateEmailConnect('Email', text.trim());
-    } else if (intent.intent === 'yes') {
-      const msg = "Great! Which email would you like to connect \u2014 Gmail, Outlook, Yahoo, iCloud, or another provider?";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
+    const match = RETURN_REASONS.find(r =>
+      lower.includes(r.label.toLowerCase()) ||
+      lower.includes(r.id.replace(/_/g, ' '))
+    );
+    if (match) {
+      this.context.returnReason = match;
+      await this._showRefundOptions(match);
+    } else if (/defective|broken|doesn't work/i.test(lower)) {
+      this.context.returnReason = RETURN_REASONS.find(r => r.id === 'defective');
+      await this._showRefundOptions(this.context.returnReason);
+    } else if (/changed.*mind|don't want/i.test(lower)) {
+      this.context.returnReason = RETURN_REASONS.find(r => r.id === 'changed_mind');
+      await this._showRefundOptions(this.context.returnReason);
+    } else if (/wrong/i.test(lower)) {
+      this.context.returnReason = RETURN_REASONS.find(r => r.id === 'wrong_item');
+      await this._showRefundOptions(this.context.returnReason);
     } else {
-      const msg = "Would you like to connect Gmail, Outlook, Yahoo, iCloud, or enter an email/order ID manually?";
+      const msg = "Please select a reason from the options above, or describe why you're returning the item.";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
       this._startListeningAfterDelay();
     }
   }
 
-  async _simulateEmailConnect(provider, email) {
-    this.state = 'scanning_orders';
-    this.session.emailProvider = provider;
-    this.session.email = email;
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="gmail-sim">
-        <div class="gmail-sim-logo">${provider === 'Gmail' ? 'Google' : provider === 'Outlook' ? 'Microsoft' : provider === 'Yahoo' ? 'Yahoo' : provider === 'iCloud' ? 'Apple' : provider === 'ProtonMail' ? 'ProtonMail' : provider === 'AOL' ? 'AOL' : 'Email'}</div>
-        <div class="gmail-sim-text">ReturnClaw wants to access your ${provider} account to find order confirmations</div>
-        <div class="gmail-sim-perms">
-          <div><span class="check">✓</span> Read order confirmation emails</div>
-          <div><span class="check">✓</span> Search for shipping receipts</div>
-        </div>
-        <div class="gmail-sim-spinner">
-          <div class="spinner"></div>
-          Connecting securely...
-        </div>
-      </div>
-    `;
-
-    this._addAgentMessageWithCard(`Connecting to ${provider}...`, card);
-    await this._delay(2200);
-
-    this.session.connectedOrders = true;
-
-    const connectedMsg = `Connected to ${email} — scanning for recent orders...`;
-    this._addAgentMessage(connectedMsg);
-    await this.speech.speak(connectedMsg);
-
-    await this._showTyping(1800);
-    await this._showFoundOrders();
-  }
-
-  async _showFoundOrders() {
-    // Filter orders for current retailer if we have one
-    let orders = MOCK_ORDERS;
-    if (this.context.retailer) {
-      orders = MOCK_ORDERS.filter(o => o.retailer === this.context.retailer);
-      if (orders.length === 0) orders = MOCK_ORDERS.slice(0, 3); // fallback
-    } else {
-      orders = MOCK_ORDERS.slice(0, 5);
-    }
-
-    const msg = `Found ${orders.length} recent order${orders.length > 1 ? 's' : ''}. Which one are you returning?`;
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    let html = `
-      <div class="card-header">
-        <div class="card-status-dot green"></div>
-        <div class="card-title">Found ${orders.length} Recent Orders</div>
-      </div>
-      <div class="order-select-list">
-    `;
-
-    orders.forEach((order, idx) => {
-      const r = RETAILERS[order.retailer];
-      const dateStr = formatMonthDay(getRecentDate(order.daysAgo));
-      html += `
-        <div class="order-select-item" data-found-idx="${idx}">
-          <div class="order-thumb">${order.emoji}</div>
-          <div class="order-info">
-            <div class="order-item-name">${order.item}</div>
-            <div class="order-meta">${r.name} — ${dateStr} · $${order.price.toFixed(2)}<br>Order #${order.orderId}</div>
-          </div>
-          <span class="select-indicator">Select →</span>
-        </div>
-      `;
-    });
-
-    html += '</div>';
-    card.innerHTML = html;
-    this._addAgentMessageWithCard(msg, card);
-    await this.speech.speak(msg);
-
-    this._foundOrders = orders;
-    this.state = 'selecting_order';
-
-    setTimeout(() => {
-      card.querySelectorAll('.order-select-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const idx = parseInt(el.dataset.foundIdx);
-          this._selectFoundOrder(idx);
-        });
-      });
-    }, 50);
-  }
-
-  async _selectFoundOrder(idx) {
-    const order = this._foundOrders[idx];
-    this.context.retailer = order.retailer;
-    this.context.item = order.item;
-    this.context.emoji = order.emoji;
-    this.context.orderId = order.orderId;
-    this.context.price = order.price;
-    this.context.orderDate = getRecentDate(order.daysAgo);
-    this.context.daysRemaining = getDaysRemaining(order.retailer);
-
-    const r = RETAILERS[order.retailer];
-    const confirmMsg = `Selected: ${order.item} from ${r.name}, $${order.price.toFixed(2)}. Order #${order.orderId}.`;
-
-    const orderCard = this._createOrderCard();
-    this._addAgentMessageWithCard(confirmMsg, orderCard);
-    await this.speech.speak(confirmMsg);
-
-    await this._delay(300);
-
-    // If we haven't picked a reason yet, ask now
-    if (!this.context.returnReason) {
-      await this._showReasonSelector();
-    } else {
-      await this._showRefundOptions();
-    }
-  }
-
-  _showOrderIdInput() {
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">Enter Order ID</div>
-      </div>
-      <div class="card-input-row">
-        <input type="text" class="card-input" id="orderIdInput" placeholder="e.g., 114-1234567-1234567" autocomplete="off">
-        <button class="card-input-btn" id="orderIdSubmit">Find</button>
-      </div>
-    `;
-
-    this._addAgentMessageWithCard("Enter your order ID below:", card);
-    this.state = 'awaiting_order_id';
-
-    setTimeout(() => {
-      const input = document.getElementById('orderIdInput');
-      const submit = document.getElementById('orderIdSubmit');
-      if (input) input.focus();
-      const handleSubmit = () => {
-        const val = input.value.trim();
-        if (val) this._handleUserInput(val);
-      };
-      submit?.addEventListener('click', handleSubmit);
-      input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
-    }, 100);
-  }
-
-  async _handleEmailChoice(intent, text) {
-    const lower = text.toLowerCase();
-
-    // BUG 3 FIX: Check for email provider keywords FIRST before intent type
-    // This ensures "yes gmail" or "yes, gmail please" matches Gmail, not just "yes"
-    if (lower.includes('gmail') || lower.includes('google') || /g\s*mail/i.test(lower) || /jean\s*mail/i.test(lower)) {
-      await this._connectEmail('Gmail');
-    } else if (lower.includes('outlook') || lower.includes('microsoft') || lower.includes('hotmail') || lower.includes('live.com') || /out\s*look/i.test(lower)) {
-      await this._connectEmail('Outlook');
-    } else if (lower.includes('yahoo')) {
-      await this._connectEmail('Yahoo');
-    } else if (lower.includes('icloud') || lower.includes('apple mail') || lower.includes('apple')) {
-      await this._connectEmail('iCloud');
-    } else if (lower.includes('proton') || lower.includes('protonmail')) {
-      await this._connectEmail('ProtonMail');
-    } else if (lower.includes('aol')) {
-      await this._connectEmail('AOL');
-    } else if (lower.includes('manual') || lower.includes('myself') || lower.includes('enter') || lower.includes('skip') || lower.includes('type')) {
-      await this._startManualFlow();
-    } else if (lower.includes('order') || lower.includes('id')) {
-      this._showOrderIdInput();
-    } else if (text.includes('@')) {
-      await this._simulateEmailConnect('Email', text.trim());
-    } else if (intent.intent === 'yes') {
-      // BUG 4 FIX: "yes" alone should ask which provider, not default to Gmail
-      const msg = "Great! Which email would you like to connect \u2014 Gmail, Outlook, Yahoo, iCloud, or another provider?";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    } else if (intent.intent === 'no') {
-      await this._startManualFlow();
-    } else if (intent.intent === 'return' || intent.intent === 'policy_inquiry') {
-      // User jumped ahead — go to manual flow and process their intent
-      this.state = 'awaiting_item';
-      await this._handleAwaitingItem(intent, text);
-    } else if (this._getDomainIntentResponse(intent)) {
-      // User asked a domain question instead of connecting — answer it
-      await this._handleDomainQuestion(intent);
-    } else {
-      const msg = "Would you like to connect Gmail, Outlook, Yahoo, iCloud, or enter your details manually?";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    }
-  }
-
-  async _handleOrderId(intent, text) {
-    this.context.orderId = text.replace(/^#/, '').trim().toUpperCase() || generateOrderId(this.context.retailer);
-    this.context.orderDate = getRecentDate();
-
-    await this._showTyping(1000);
-
-    const priceStr = this.context.price ? `, $${this.context.price.toFixed(2)}` : '';
-    const foundMsg = `Found it — order #${this.context.orderId}. ${this.context.item}${priceStr}, ordered ${formatDate(this.context.orderDate)}. Is this correct?`;
-    const orderCard = this._createOrderCard();
-    this._addAgentMessageWithCard(foundMsg, orderCard);
-    await this.speech.speak(foundMsg);
-
-    this.state = 'awaiting_order_confirm';
-    this._startListeningAfterDelay();
-  }
-
-  _createOrderCard() {
+  // ---- Refund Options ----
+  async _showRefundOptions(reason) {
     const r = RETAILERS[this.context.retailer];
+
+    const msg = `Got it — "${reason.label}". How would you like your refund?`;
+
     const card = document.createElement('div');
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
-        <div class="card-status-dot green"></div>
-        <div class="card-title">Order Found</div>
+        <div class="card-status-dot blue"></div>
+        <div class="card-title">💰 Refund Method</div>
       </div>
       <div class="card-body">
-        <div class="order-detail">
-          <div class="order-thumb">${this.context.emoji}</div>
-          <div class="order-info">
-            <div class="order-item-name">${this.context.item}</div>
-            <div class="order-meta">${r.name}${this.context.price ? ' · $' + this.context.price.toFixed(2) : ''}</div>
-          </div>
-        </div>
-        <div class="card-divider"></div>
-        <div class="card-row">
-          <span class="card-row-label">Order ID</span>
-          <span class="card-row-value">#${this.context.orderId}</span>
-        </div>
-        <div class="card-row">
-          <span class="card-row-label">Order Date</span>
-          <span class="card-row-value">${formatDate(this.context.orderDate)}</span>
-        </div>
-      </div>
-    `;
-    return card;
-  }
-
-  async _handleOrderConfirm(intent, text) {
-    if (intent.intent === 'yes' || /yes|yeah|sure|correct|that's (it|the one|right)|right|yep/i.test(text.toLowerCase())) {
-      if (!this.context.returnReason) {
-        await this._showReasonSelector();
-      } else {
-        await this._showRefundOptions();
-      }
-    } else if (intent.intent === 'no') {
-      this._showOrderIdInput();
-    } else {
-      const msg = "Is this the correct order? Say yes or no.";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this._startListeningAfterDelay();
-    }
-  }
-
-  // ---- Refund Method Selection ----
-  async _showRefundOptions() {
-    const r = RETAILERS[this.context.retailer];
-    const isDefective = this.context.returnReason?.id === 'defective';
-
-    const msg = "How would you like your refund?";
-
-    const card = document.createElement('div');
-    card.className = 'action-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="card-status-dot blue"></div>
-        <div class="card-title">How would you like your refund?</div>
-      </div>
-      <div class="card-btn-group">
-        <button class="refund-option" data-refund="original">
-          <div class="refund-option-title">💳 Original payment method</div>
-          <div class="refund-option-desc">Back to your original payment method</div>
+        <div class="refund-option" data-refund="original" role="button" tabindex="0" aria-label="Refund to original payment method">
+          <div class="refund-option-title"><span>Original Payment</span><span>💳</span></div>
+          <div class="refund-option-desc">Refund to the card or method you used to pay</div>
           <div class="refund-option-time">3–5 business days</div>
-        </button>
-        <button class="refund-option" data-refund="store_credit">
-          <div class="refund-option-title">🏷️ Store credit</div>
-          <div class="refund-option-desc">${r.name} Gift Card balance</div>
-          <div class="refund-option-time">Instant — available immediately</div>
-        </button>
-        ${isDefective ? `<button class="refund-option" data-refund="exchange">
-          <div class="refund-option-title">🔄 Exchange for replacement</div>
-          <div class="refund-option-desc">Same item, ships in 1–2 days</div>
-          <div class="refund-option-time">Free expedited shipping</div>
-        </button>` : `<button class="refund-option" data-refund="exchange">
-          <div class="refund-option-title">🔄 Exchange for replacement</div>
-          <div class="refund-option-desc">Same item, ships in 1–2 days</div>
-          <div class="refund-option-time">Standard shipping</div>
-        </button>`}
+        </div>
+        <div class="refund-option" data-refund="store_credit" role="button" tabindex="0" aria-label="Refund as store credit">
+          <div class="refund-option-title"><span>${r.name} Store Credit</span><span>🏷️</span></div>
+          <div class="refund-option-desc">Instant credit to your ${r.name} account</div>
+          <div class="refund-option-time">Instant</div>
+        </div>
+        <div class="refund-option" data-refund="exchange" role="button" tabindex="0" aria-label="Exchange for a different item">
+          <div class="refund-option-title"><span>Exchange</span><span>🔄</span></div>
+          <div class="refund-option-desc">Get a different size, color, or replacement</div>
+          <div class="refund-option-time">Ships when item is received</div>
+        </div>
       </div>
     `;
 
@@ -2696,310 +2244,391 @@ class ReturnClawAgent {
     this.state = 'selecting_refund';
 
     setTimeout(() => {
-      card.querySelectorAll('.refund-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-          this._selectRefundMethod(btn.dataset.refund);
+      card.querySelectorAll('.refund-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          this.context.refundMethod = opt.dataset.refund;
+          this.session.preferredRefundMethod = opt.dataset.refund;
+          this._handleRefundSelected();
         });
       });
-    }, 50);
+    }, 100);
   }
 
-  async _selectRefundMethod(method) {
-    this.context.refundMethod = method;
-    this.session.preferredRefundMethod = method; // Remember preference for future returns
-
-    const methodNames = {
-      'original': 'original payment method',
-      'store_credit': 'store credit (instant)',
-      'exchange': 'replacement exchange'
-    };
-
-    const msg = `Great — ${methodNames[method]}. Let me generate your return.`;
-    this._addAgentMessage(msg);
-    await this.speech.speak(msg);
-
-    await this._delay(300);
+  async _handleRefundSelected() {
+    await this._delay(200);
+    // Set up order details if not already set
+    if (!this.context.orderId) {
+      this.context.orderId = generateOrderId(this.context.retailer);
+    }
+    if (!this.context.price) {
+      const match = MOCK_ORDERS.find(o => o.retailer === this.context.retailer);
+      this.context.price = match ? match.price : 49.99;
+    }
+    if (!this.context.orderDate) {
+      this.context.orderDate = getRecentDate();
+    }
     await this._showReturnLink();
   }
 
   async _handleRefundSelection(intent, text) {
     const lower = text.toLowerCase();
-    if (lower.includes('original') || lower.includes('card') || lower.includes('visa') || lower.includes('payment')) {
-      await this._selectRefundMethod('original');
-    } else if (lower.includes('credit') || lower.includes('gift') || lower.includes('store') || lower.includes('instant')) {
-      await this._selectRefundMethod('store_credit');
-    } else if (lower.includes('exchange') || lower.includes('replace') || lower.includes('swap')) {
-      await this._selectRefundMethod('exchange');
+    if (/original|card|payment|credit card|debit/i.test(lower)) {
+      this.context.refundMethod = 'original';
+      this.session.preferredRefundMethod = 'original';
+      await this._handleRefundSelected();
+    } else if (/store.*credit|credit.*store|instant/i.test(lower)) {
+      this.context.refundMethod = 'store_credit';
+      this.session.preferredRefundMethod = 'store_credit';
+      await this._handleRefundSelected();
+    } else if (/exchange|swap|replace/i.test(lower)) {
+      this.context.refundMethod = 'exchange';
+      this.session.preferredRefundMethod = 'exchange';
+      await this._handleRefundSelected();
     } else {
-      await this._selectRefundMethod('original');
+      const msg = "Please select a refund method: original payment, store credit, or exchange.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
     }
   }
 
-  // ---- Return Link & Carrier Options ----
+  // ---- Return Link & Shipping ----
   async _showReturnLink() {
+    await this._showTyping(1500);
+
     const r = RETAILERS[this.context.retailer];
+    const returnUrl = await this._generateRealReturnLink() || r.returnUrl;
+
     this._setPipelineStep('execution', 'done');
-    this._setPipelineStep('carrier', 'active');
-
-    if (!this.context.orderId) {
-      this.context.orderId = generateOrderId(this.context.retailer);
-    }
-    if (!this.context.price) {
-      this.context.price = [29.99, 49.99, 79.99, 99.99, 149.99, 249.99][Math.floor(Math.random() * 6)];
-    }
-    if (!this.context.orderDate) {
-      this.context.orderDate = getRecentDate();
-    }
-
-    // Try to get real deep link in live mode
-    let returnUrl = r.returnUrl;
-    if (isLiveMode) {
-      const realUrl = await this._generateRealReturnLink();
-      if (realUrl) returnUrl = realUrl;
-    }
-
-    const msg = "I've generated your return link. Click below to open the return page and follow the steps.";
 
     const card = document.createElement('div');
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
         <div class="card-status-dot green"></div>
-        <div class="card-title">Return Link Ready</div>
+        <div class="card-title">📋 Return Initiated</div>
       </div>
       <div class="card-body">
-        <div class="card-row">
-          <span class="card-row-label">Retailer</span>
-          <span class="card-row-value">${r.name} Returns Center</span>
-        </div>
-        <div class="card-row">
-          <span class="card-row-label">Order</span>
-          <span class="card-row-value">#${this.context.orderId}</span>
+        <div class="order-detail">
+          <div class="order-thumb">${this.context.emoji}</div>
+          <div class="order-info">
+            <div class="order-item-name">${this.context.item || 'Your Item'}</div>
+            <div class="order-meta">${r.name} · Order #${this.context.orderId} · $${this.context.price.toFixed(2)}</div>
+          </div>
         </div>
         <div class="card-divider"></div>
-        <a href="${returnUrl}" target="_blank" rel="noopener noreferrer" class="card-btn primary" style="text-decoration:none; margin-top: 0.5rem;">
-          Open Return Page →
+        <ol class="steps-list">
+          ${r.conditions ? `<li><span class="step-num">1</span> Verify: ${r.conditions[0]}</li>` : ''}
+          <li><span class="step-num">2</span> Click the return link below</li>
+          <li><span class="step-num">3</span> Select return reason and refund method</li>
+          <li><span class="step-num">4</span> Print or save your shipping label</li>
+        </ol>
+        <div class="card-divider"></div>
+        <a href="${returnUrl}" target="_blank" rel="noopener noreferrer" class="card-btn primary" style="text-decoration: none;">
+          Open ${r.name} Returns →
         </a>
-        <div class="card-divider"></div>
-        <ul class="steps-list">
-          <li><span class="step-num">1</span> Sign in to ${r.name}</li>
-          <li><span class="step-num">2</span> Select item to return</li>
-          <li><span class="step-num">3</span> Choose return reason</li>
-          <li><span class="step-num">4</span> Print or save return label</li>
-        </ul>
       </div>
     `;
 
+    const msg = `Your return is set up. Click the link to complete it on ${r.name}'s website. Now, how would you like to ship the item back?`;
     this._addAgentMessageWithCard(msg, card);
     await this.speech.speak(msg);
 
-    await this._delay(800);
-
-    const followUp = "After you've submitted the return, would you like help with shipping? I can find a drop-off location or schedule a pickup.";
-    this._addAgentMessage(followUp);
-    await this.speech.speak(followUp);
-
-    await this._delay(300);
+    await this._delay(400);
     await this._showCarrierOptions();
   }
 
+  // ---- Carrier Options ----
   async _showCarrierOptions() {
+    this._setPipelineStep('carrier', 'active');
+
+    const r = RETAILERS[this.context.retailer];
     const card = document.createElement('div');
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
         <div class="card-status-dot blue"></div>
-        <div class="card-title">How would you like to return it?</div>
+        <div class="card-title">📦 Shipping Method</div>
       </div>
-      <div class="card-btn-group">
-        <button class="card-btn secondary" id="dropoffBtn">
-          <span class="card-btn-icon">📍</span>
-          Find Drop-off Location
-        </button>
-        <button class="card-btn secondary" id="pickupBtn">
-          <span class="card-btn-icon">🏠</span>
-          Schedule Home Pickup
-        </button>
-        <button class="card-btn outline" id="selfShipBtn">
-          <span class="card-btn-icon">📋</span>
-          I'll Handle Shipping
-        </button>
+      <div class="card-body">
+        <div class="card-btn-group">
+          <button class="card-btn secondary" id="carrierPickup" aria-label="Schedule a carrier pickup">
+            🚚 Schedule Pickup (Free)
+          </button>
+          <button class="card-btn secondary" id="carrierDropoff" aria-label="Find a drop-off location">
+            📍 Drop-off Location
+          </button>
+          <button class="card-btn outline" id="carrierSelf" aria-label="Ship it yourself">
+            ✉️ I'll ship it myself
+          </button>
+        </div>
+        <div class="card-hint">
+          Available drop-offs: ${r.dropoffs.join(', ')}
+        </div>
       </div>
     `;
 
-    this._addAgentMessageWithCard('', card);
+    this._addAgentMessageWithCard("How would you like to ship the item back?", card);
     this.state = 'awaiting_carrier_choice';
 
     setTimeout(() => {
-      document.getElementById('dropoffBtn')?.addEventListener('click', () => this._handleCarrierSelect('dropoff'));
-      document.getElementById('pickupBtn')?.addEventListener('click', () => this._handleCarrierSelect('pickup'));
-      document.getElementById('selfShipBtn')?.addEventListener('click', () => this._handleCarrierSelect('self'));
-    }, 50);
+      document.getElementById('carrierPickup')?.addEventListener('click', () => {
+        this.context.carrierChoice = 'pickup';
+        this.session.preferredCarrier = 'pickup';
+        this._askForAddress();
+      });
+      document.getElementById('carrierDropoff')?.addEventListener('click', () => {
+        this.context.carrierChoice = 'dropoff';
+        this.session.preferredCarrier = 'dropoff';
+        this._askForZip();
+      });
+      document.getElementById('carrierSelf')?.addEventListener('click', () => {
+        this.context.carrierChoice = 'self';
+        this._showSelfShipInfo();
+      });
+    }, 100);
   }
 
   async _handleCarrierChoice(intent, text) {
     const lower = text.toLowerCase();
-    if (lower.includes('drop') || lower.includes('location') || lower.includes('find')) {
-      await this._handleCarrierSelect('dropoff');
-    } else if (lower.includes('pickup') || lower.includes('pick up') || lower.includes('home') || lower.includes('schedule')) {
-      await this._handleCarrierSelect('pickup');
-    } else if (lower.includes('handle') || lower.includes('myself') || lower.includes('self') || lower.includes('skip') || intent.intent === 'no') {
-      await this._handleCarrierSelect('self');
+    if (/pickup|pick up|come get|schedule/i.test(lower) || intent.intent === 'schedule_pickup') {
+      this.context.carrierChoice = 'pickup';
+      this.session.preferredCarrier = 'pickup';
+      await this._askForAddress();
+    } else if (/drop.*off|drop off|bring|location|nearest/i.test(lower) || intent.intent === 'drop_off') {
+      this.context.carrierChoice = 'dropoff';
+      this.session.preferredCarrier = 'dropoff';
+      await this._askForZip();
+    } else if (/self|myself|own|mail/i.test(lower)) {
+      this.context.carrierChoice = 'self';
+      await this._showSelfShipInfo();
     } else {
-      const msg = "Would you like me to find a drop-off location, schedule a home pickup, or will you handle shipping yourself?";
+      const msg = "Would you like to schedule a pickup, find a drop-off location, or ship it yourself?";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
       this._startListeningAfterDelay();
     }
   }
 
-  async _handleCarrierSelect(choice) {
-    this.context.carrierChoice = choice;
-    this.session.preferredCarrier = choice; // Remember preference for future returns
+  async _showSelfShipInfo() {
+    this.context.trackingNumber = generateTrackingNumber();
+    const r = RETAILERS[this.context.retailer];
 
-    if (choice === 'dropoff') {
-      const msg = "What's your zip code? I'll find nearby drop-off locations.";
-      this._addAgentMessage(msg);
-      await this.speech.speak(msg);
-      this.state = 'awaiting_zipcode';
-      this._startListeningAfterDelay();
-    } else if (choice === 'pickup') {
-      // Need address for pickup
-      await this._showAddressForm();
-    } else {
-      await this._offerSmsTracking();
-    }
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-status-dot green"></div>
+        <div class="card-title">✉️ Self-Ship Instructions</div>
+      </div>
+      <div class="card-body">
+        <ol class="steps-list">
+          <li><span class="step-num">1</span> Pack the item securely in its original packaging</li>
+          <li><span class="step-num">2</span> Print and attach the return label</li>
+          <li><span class="step-num">3</span> Drop off at any ${r.dropoffs[0] || 'carrier'} location</li>
+          <li><span class="step-num">4</span> Keep your receipt as proof of shipment</li>
+        </ol>
+      </div>
+    `;
+
+    const msg = "Pack the item securely, attach the return label, and drop it off at any carrier location. Keep your receipt as proof of shipment.";
+    this._addAgentMessageWithCard(msg, card);
+    await this.speech.speak(msg);
+
+    this._setPipelineStep('carrier', 'done');
+    await this._delay(500);
+    await this._offerSmsTracking('self');
   }
 
-  // ---- Address Confirmation ----
-  async _showAddressForm() {
-    // If we already have an address, confirm it
+  // ---- Address Collection ----
+  async _askForAddress() {
     if (this.session.address) {
       const addr = this.session.address;
-      const msg = `You mentioned you're at ${addr.street}${addr.apt ? ' Apt ' + addr.apt : ''}, ${addr.city}, ${addr.state} ${addr.zip} — should I use the same address?`;
+      const msg = `I have your address on file: ${addr.street}, ${addr.city}, ${addr.state} ${addr.zip}. Should I use this for the pickup?`;
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
-      this.state = 'awaiting_address_confirm';
+      this.state = 'confirm_address';
       this._startListeningAfterDelay();
       return;
     }
-
-    const msg = "What address should I use for the pickup?";
 
     const card = document.createElement('div');
     card.className = 'action-card';
     card.innerHTML = `
       <div class="card-header">
         <div class="card-status-dot blue"></div>
-        <div class="card-title">📍 Confirm Your Address</div>
+        <div class="card-title">📍 Pickup Address</div>
       </div>
-      <div class="address-form">
-        <div class="address-row">
-          <input type="text" class="card-input" id="addrStreet" placeholder="Street address" autocomplete="address-line1">
+      <div class="card-body">
+        <div class="address-form">
+          <div class="address-row">
+            <input type="text" class="card-input" id="addrStreet" placeholder="Street address" autocomplete="street-address" aria-label="Street address">
+          </div>
+          <div class="address-row">
+            <input type="text" class="card-input" id="addrCity" placeholder="City" autocomplete="address-level2" aria-label="City">
+            <input type="text" class="card-input sm" id="addrState" placeholder="State" maxlength="2" autocomplete="address-level1" aria-label="State">
+            <input type="text" class="card-input md" id="addrZip" placeholder="ZIP" maxlength="10" autocomplete="postal-code" aria-label="ZIP code">
+          </div>
+          <button class="card-btn primary" id="addrSubmit">Use This Address</button>
         </div>
-        <div class="address-row">
-          <input type="text" class="card-input md" id="addrApt" placeholder="Apt / Suite" autocomplete="address-line2">
-          <input type="text" class="card-input" id="addrCity" placeholder="City" autocomplete="address-level2">
-        </div>
-        <div class="address-row">
-          <input type="text" class="card-input sm" id="addrState" placeholder="State" maxlength="2" autocomplete="address-level1">
-          <input type="text" class="card-input sm" id="addrZip" placeholder="ZIP" maxlength="10" autocomplete="postal-code">
-        </div>
-        <button class="card-btn primary" id="addrSubmit" style="margin-top: 0.375rem;">Use This Address</button>
       </div>
-      <div class="card-hint">Or say your address and I'll fill it in automatically.</div>
     `;
 
-    this._addAgentMessageWithCard(msg, card);
-    await this.speech.speak(msg);
-    this.state = 'confirming_address';
+    this._addAgentMessageWithCard("What's the pickup address?", card);
+    await this.speech.speak("What's the pickup address?");
+    this.state = 'awaiting_address';
 
     setTimeout(() => {
-      document.getElementById('addrStreet')?.focus();
       document.getElementById('addrSubmit')?.addEventListener('click', () => {
         const street = document.getElementById('addrStreet')?.value.trim();
-        const apt = document.getElementById('addrApt')?.value.trim();
         const city = document.getElementById('addrCity')?.value.trim();
         const state = document.getElementById('addrState')?.value.trim();
         const zip = document.getElementById('addrZip')?.value.trim();
         if (street && city && state && zip) {
-          this._confirmAddress({ street, apt, city, state, zip });
+          this.session.address = { street, city, state, zip };
+          this._schedulePickup();
+        } else {
+          this._addAgentMessage("Please fill in all address fields.");
         }
       });
     }, 100);
   }
 
   async _handleAddressInput(intent, text) {
-    // Try to parse a spoken address
-    if (intent.intent === 'address' || text.length > 10) {
-      // Simple address parsing: assume format "123 Main St, Denver, CO 80202"
-      const parts = text.split(',').map(p => p.trim());
-      let street = parts[0] || text;
-      let city = parts[1] || '';
-      let stateZip = (parts[2] || '').trim().split(/\s+/);
-      let state = stateZip[0] || '';
-      let zip = stateZip[1] || '';
-
-      // If we couldn't parse a full address, ask for clarification
-      if (!city || !state || !zip) {
-        const msg = "I got the street address. Could you also provide the city, state, and zip code?";
-        this._addAgentMessage(msg);
-        await this.speech.speak(msg);
-        this._startListeningAfterDelay();
-        return;
-      }
-
-      const address = { street, apt: '', city, state: state.toUpperCase(), zip };
-      await this._confirmAddress(address);
+    if (intent.intent === 'address') {
+      // Try to parse the address
+      this.session.address = { street: intent.value, city: '', state: '', zip: '' };
+      const msg = `I got "${intent.value}". Can you also give me the city, state, and ZIP code?`;
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+    } else if (intent.intent === 'zipcode') {
+      this.session.address = this.session.address || { street: '', city: '', state: '', zip: '' };
+      this.session.address.zip = intent.value;
+      await this._schedulePickup();
     } else {
-      const msg = "Please provide your full street address, or fill out the form above.";
+      const msg = "Please enter your full pickup address using the form above.";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
       this._startListeningAfterDelay();
     }
-  }
-
-  async _confirmAddress(address) {
-    this.session.address = address;
-    const fullAddr = `${address.street}${address.apt ? ', Apt ' + address.apt : ''}, ${address.city}, ${address.state} ${address.zip}`;
-    const msg = `Got it — ${fullAddr}. Is that correct?`;
-    this._addAgentMessage(msg);
-    await this.speech.speak(msg);
-    this.state = 'awaiting_address_confirm';
-    this._startListeningAfterDelay();
   }
 
   async _handleAddressConfirm(intent, text) {
-    if (intent.intent === 'yes' || /yes|yeah|sure|correct|right|yep|looks good|good/i.test(text.toLowerCase())) {
-      await this._showPickupConfirmation();
-    } else if (intent.intent === 'no') {
-      this.session.address = null;
-      await this._showAddressForm();
+    if (intent.intent === 'yes' || /yes|yeah|sure|ok|correct|right|that's right|sounds good/i.test(text.toLowerCase())) {
+      await this._schedulePickup();
     } else {
-      const msg = "Is the address correct? Say yes or no.";
+      await this._askForAddress();
+    }
+  }
+
+  async _schedulePickup() {
+    const tomorrow = getTomorrowDate();
+    const msg = `Would ${formatShortDate(tomorrow)} between 12:00 PM and 4:00 PM work for the pickup?`;
+    this._addAgentMessage(msg);
+    await this.speech.speak(msg);
+    this.state = 'awaiting_pickup_date';
+    this._startListeningAfterDelay();
+  }
+
+  async _askForZip() {
+    if (this.session.address?.zip) {
+      await this._showDropoffLocations(this.session.address.zip);
+      return;
+    }
+
+    const msg = "What's your ZIP code? I'll find the nearest drop-off locations.";
+    this._addAgentMessage(msg);
+    await this.speech.speak(msg);
+    this.state = 'awaiting_zip';
+    this._startListeningAfterDelay();
+  }
+
+  async _handleZipcode(intent, text) {
+    const zipMatch = text.match(/\d{5}/);
+    if (zipMatch) {
+      const zip = zipMatch[0];
+      this.session.address = this.session.address || {};
+      this.session.address.zip = zip;
+      await this._showDropoffLocations(zip);
+    } else {
+      const msg = "Please enter a 5-digit ZIP code so I can find locations near you.";
       this._addAgentMessage(msg);
       await this.speech.speak(msg);
       this._startListeningAfterDelay();
     }
   }
 
-  async _handleZipcode(intent, text) {
-    const zip = text.replace(/\D/g, '').slice(0, 5);
-    if (zip.length === 5) {
-      await this._showDropoffLocations(zip);
-    } else if (intent.intent === 'zipcode') {
-      await this._showDropoffLocations(intent.value);
-    } else {
-      const anyZip = text.replace(/[^0-9]/g, '');
-      if (anyZip.length >= 5) {
-        await this._showDropoffLocations(anyZip.slice(0, 5));
-      } else {
-        const msg = "Please enter a 5-digit zip code so I can find nearby locations.";
-        this._addAgentMessage(msg);
-        await this.speech.speak(msg);
-        this._startListeningAfterDelay();
+  async _handleOrderSelection(intent, text) {
+    const numMatch = text.match(/(\d+)/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1]) - 1;
+      if (this.state === 'select_real_order' && this._realOrders && this._realOrders[idx]) {
+        await this._selectRealOrder(idx);
+        return;
+      }
+      if (this._searchMatches && this._searchMatches[idx]) {
+        await this._selectSearchMatch(idx);
+        return;
       }
     }
+    if (intent.intent === 'yes' || /first|top|that one/i.test(text.toLowerCase())) {
+      if (this.state === 'select_real_order' && this._realOrders?.length > 0) {
+        await this._selectRealOrder(0);
+      } else if (this._searchMatches?.length > 0) {
+        await this._selectSearchMatch(0);
+      }
+    } else {
+      const msg = "Please select one of the orders above by clicking on it.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+    }
+  }
+
+  async _handleOrderId(intent, text) {
+    if (intent.intent === 'order_id' || text.trim().length >= 5) {
+      this.context.orderId = text.trim();
+      const msg = `Got it — order ${this.context.orderId}. Let me look that up.`;
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this.state = 'confirm_return';
+      await this._delay(300);
+      await this._showPolicyCheck();
+    } else {
+      const msg = "Please enter your order ID. It's usually in your confirmation email — looks like 114-1234567-1234567 for Amazon.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+    }
+  }
+
+  async _handleOrderConfirm(intent, text) {
+    await this._handleReturnConfirm(intent, text);
+  }
+
+  async _handleEmailIdentification(intent, text) {
+    const lower = text.toLowerCase();
+    if (/gmail/i.test(lower)) {
+      this._showDemoEmailPrompt('gmail');
+    } else if (/outlook|hotmail|live/i.test(lower)) {
+      this._showDemoEmailPrompt('outlook');
+    } else if (text.includes('@')) {
+      this.session.email = text.trim();
+      this.session.connectedOrders = true;
+      this.session.connectionType = 'demo';
+      await this._handleDemoConnect(text.trim());
+    } else if (/manual|type|enter|skip/i.test(lower)) {
+      await this._startManualFlow();
+    } else {
+      const msg = "Which email provider do you use? Gmail, Outlook, or another? You can also type 'skip' to enter details manually.";
+      this._addAgentMessage(msg);
+      await this.speech.speak(msg);
+      this._startListeningAfterDelay();
+    }
+  }
+
+  async _handleEmailChoice(intent, text) {
+    await this._handleEmailIdentification(intent, text);
   }
 
   async _showDropoffLocations(zip) {
@@ -3142,7 +2771,7 @@ class ReturnClawAgent {
       </div>
       <div class="card-body">
         <div class="card-input-row">
-          <input type="tel" class="card-input" id="phoneInput" placeholder="(555) 123-4567" autocomplete="tel">
+          <input type="tel" class="card-input" id="phoneInput" placeholder="(555) 123-4567" autocomplete="tel" aria-label="Phone number for SMS tracking">
           <button class="card-input-btn" id="phoneSubmit">Enable</button>
         </div>
         <ul class="sms-benefits">
@@ -3152,7 +2781,7 @@ class ReturnClawAgent {
           <li>Refund processed</li>
         </ul>
         <div class="card-divider"></div>
-        <button class="card-btn outline" id="skipSmsBtn">Skip — continue without SMS</button>
+        <button class="card-btn outline" id="skipSmsBtn" aria-label="Skip SMS tracking">Skip — continue without SMS</button>
       </div>
     `;
 
@@ -3392,14 +3021,17 @@ class ReturnClawAgent {
       ? `I found ${orders.length} items from ${r.name}. Select the items you'd like to return:`
       : `Here are your recent orders. Select items to return:`;
 
-    const card = this._createMultiItemCard();
+    // Demo note
+    const demoNote = !isLiveMode ? '<div class="demo-banner">⚡ Demo orders shown — connect your email for real order data</div>' : '';
+
+    const card = this._createMultiItemCard(demoNote);
     this._addAgentMessageWithCard(msg, card);
     await this.speech.speak(msg);
 
     this.state = 'multi_item_select';
   }
 
-  _createMultiItemCard() {
+  _createMultiItemCard(demoNote) {
     const card = document.createElement('div');
     card.className = 'action-card';
     card.id = 'multiItemCard';
@@ -3413,6 +3045,7 @@ class ReturnClawAgent {
         <div class="card-title">📦 Multi-Item Return</div>
       </div>
       <div class="card-body">
+        ${demoNote || ''}
         <div class="multi-item-list">
     `;
 
@@ -3420,7 +3053,7 @@ class ReturnClawAgent {
       if (item.eligible) {
         html += `
           <div class="multi-item-row">
-            <div class="multi-item-check ${item.checked ? 'checked' : ''}" data-multi-idx="${idx}">✓</div>
+            <div class="multi-item-check ${item.checked ? 'checked' : ''}" data-multi-idx="${idx}" role="checkbox" aria-checked="${item.checked}" aria-label="Select ${item.item}">✓</div>
             <span class="multi-item-name">${item.emoji} ${item.item}</span>
             <span class="multi-item-price">$${item.price.toFixed(2)}</span>
             <span class="multi-item-badge eligible">Eligible</span>
@@ -3444,7 +3077,7 @@ class ReturnClawAgent {
           <span class="total-label">Total Refund</span>
           <span class="total-value" id="multiTotal">$${totalRefund.toFixed(2)}</span>
         </div>
-        <button class="card-btn primary" id="returnSelectedBtn" style="margin-top:0.5rem;">Return Selected Items</button>
+        <button class="card-btn primary" id="returnSelectedBtn" style="margin-top:0.5rem;" aria-label="Return selected items">Return Selected Items</button>
       </div>
     `;
 
@@ -3457,6 +3090,7 @@ class ReturnClawAgent {
           const idx = parseInt(el.dataset.multiIdx);
           this.multiItems[idx].checked = !this.multiItems[idx].checked;
           el.classList.toggle('checked');
+          el.setAttribute('aria-checked', this.multiItems[idx].checked);
           // Update total
           const eligible = this.multiItems.filter(i => i.eligible && i.checked);
           const total = eligible.reduce((sum, i) => sum + i.price, 0);
@@ -3554,7 +3188,7 @@ class ReturnClawAgent {
           ` : ''}
         </div>
         <div class="card-divider"></div>
-        <button class="card-btn primary" id="startAnotherBtn">
+        <button class="card-btn primary" id="startAnotherBtn" aria-label="Start another return">
           Start Another Return
         </button>
       </div>
@@ -3569,8 +3203,13 @@ class ReturnClawAgent {
       item: this.context.item,
       retailer: this.context.retailer,
       price: this.context.price,
-      tracking: this.context.trackingNumber
+      tracking: this.context.trackingNumber,
+      emoji: this.context.emoji,
+      timestamp: new Date().toISOString()
     });
+
+    // Update history panel
+    this._updateHistoryPanel();
 
     this.state = 'complete';
 
@@ -3603,7 +3242,7 @@ class ReturnClawAgent {
   }
 
   async _handleDefault(intent, text) {
-    // BUG 7 FIX: Never silently drop input — always acknowledge and redirect
+    // Never silently drop input — always acknowledge and redirect
     // Try domain intent handling first
     if (this._getDomainIntentResponse(intent)) {
       await this._handleDomainQuestion(intent);
@@ -3728,11 +3367,22 @@ class ReturnClawAgent {
     if (!el) return;
     el.classList.remove('active', 'done');
     if (status) el.classList.add(status);
+
+    // Animate connector fills
+    if (status === 'done') {
+      const connector = el.nextElementSibling;
+      if (connector && connector.classList.contains('pipeline-connector')) {
+        const fill = connector.querySelector('.pipeline-connector-fill');
+        if (fill) fill.style.transform = 'scaleX(1)';
+      }
+    }
   }
 
   _resetPipeline() {
     ['triage', 'policy', 'execution', 'carrier'].forEach(s => this._setPipelineStep(s, null));
     this.pipeline.classList.remove('visible');
+    // Reset connector fills
+    document.querySelectorAll('.pipeline-connector-fill').forEach(f => f.style.transform = 'scaleX(0)');
   }
 
   _resetContext() {
@@ -3772,7 +3422,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Make landing page orb clickable — scrolls to demo and starts conversation
   const landingOrbContainer = document.getElementById('landingOrbContainer');
   if (landingOrbContainer) {
-    landingOrbContainer.addEventListener('click', () => {
+    const triggerDemo = () => {
       const demoSection = document.getElementById('demo');
       if (demoSection) {
         demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3783,6 +3433,13 @@ document.addEventListener('DOMContentLoaded', () => {
           window.agent._handleOrbClick();
         }
       }, 600);
+    };
+    landingOrbContainer.addEventListener('click', triggerDemo);
+    landingOrbContainer.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerDemo();
+      }
     });
   }
 

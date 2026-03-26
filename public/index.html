@@ -18,6 +18,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ReturnClaw — AI-Powered Returns Agent</title>
 <meta name="description" content="Return anything from any retailer in 60 seconds. Voice-powered AI return agent with email scanning, tracking, and multi-item returns.">
+<meta property="og:title" content="ReturnClaw — AI-Powered Returns Agent">
+<meta property="og:description" content="Return anything from any retailer in 60 seconds. Voice-powered AI return agent.">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,25 +34,26 @@
 
   <!-- Hero -->
   <section class="landing-hero">
-    <div class="landing-brand">🦞 RETURNCLAW</div>
-    <div class="landing-orb-container" id="landingOrbContainer" style="cursor: pointer;">
+    <div class="landing-brand" aria-label="ReturnClaw brand">🦞 RETURNCLAW</div>
+    <div class="landing-orb-container" id="landingOrbContainer" style="cursor: pointer;" role="button" tabindex="0" aria-label="Click to start a return demo">
       <div class="landing-orb" id="landingOrb">
         <div class="landing-orb-ring"></div>
         <div class="landing-orb-ring"></div>
         <div class="landing-orb-ring"></div>
         <div class="landing-orb-core"></div>
       </div>
+      <p class="landing-orb-cta">Tap to start your return</p>
     </div>
     <h1>Return anything.<br><span class="accent">One voice command.</span></h1>
     <p class="landing-subtitle">The voice-first AI agent that handles your online returns across every retailer. No forms. No hold music. Just say the word.</p>
     <div class="landing-cta-row">
-      <a href="#demo" class="btn-primary">Try It Now ↓</a>
-      <a href="https://github.com/KelleyHuntPLLC/returnclaw" class="btn-secondary" target="_blank">Star on GitHub ⭐</a>
+      <a href="#demo" class="btn-primary" aria-label="Try ReturnClaw now">Try It Now ↓</a>
+      <a href="https://github.com/KelleyHuntPLLC/returnclaw" class="btn-secondary" target="_blank" rel="noopener noreferrer" aria-label="Star ReturnClaw on GitHub">Star on GitHub ⭐</a>
     </div>
   </section>
 
   <!-- Stats Bar -->
-  <section class="landing-stats">
+  <section class="landing-stats" aria-label="Product statistics">
     <div class="stat">
       <span class="stat-number" data-target="25669">0</span>
       <span class="stat-label">Lines of TypeScript</span>
@@ -59,14 +63,14 @@
       <span class="stat-label">AI Agents</span>
     </div>
     <div class="stat">
-      <span class="stat-number" data-target="14">0</span>
+      <span class="stat-number" data-target="20">0</span>
       <span class="stat-label">Retailers</span>
     </div>
     <div class="stat-text">Patent-Pending</div>
   </section>
 
   <!-- How It Works -->
-  <section class="landing-how-it-works">
+  <section class="landing-how-it-works" aria-label="How ReturnClaw works">
     <h2 class="landing-fade-in">How It Works</h2>
     <div class="landing-steps">
       <div class="landing-step-card">
@@ -91,7 +95,7 @@
   </section>
 
   <!-- Architecture Diagram -->
-  <section class="landing-architecture">
+  <section class="landing-architecture" aria-label="Architecture overview">
     <h2 class="landing-fade-in">The Stack</h2>
     <p class="section-subtitle landing-fade-in">5-layer architecture from voice input to intelligence</p>
     <div class="arch-stack">
@@ -134,7 +138,7 @@
   </section>
 
   <!-- Supported Retailers -->
-  <section class="landing-retailers">
+  <section class="landing-retailers" aria-label="Supported retailers">
     <h2 class="landing-fade-in">Supported Retailers</h2>
     <div class="retailer-grid landing-fade-in">
       <span class="retailer-badge">📦 Amazon</span>
@@ -151,18 +155,24 @@
       <span class="retailer-badge">👔 Zara</span>
       <span class="retailer-badge">💄 Sephora</span>
       <span class="retailer-badge">🧥 H&M</span>
+      <span class="retailer-badge">👟 Adidas</span>
+      <span class="retailer-badge">🧘 Lululemon</span>
+      <span class="retailer-badge">🏔️ REI</span>
+      <span class="retailer-badge">🏡 Pottery Barn</span>
+      <span class="retailer-badge">🍽️ Williams-Sonoma</span>
+      <span class="retailer-badge">🛋️ Wayfair</span>
     </div>
   </section>
 
   <!-- Voice Commands Table -->
-  <section class="landing-commands">
+  <section class="landing-commands" aria-label="Voice command examples">
     <h2 class="landing-fade-in">Voice Commands</h2>
     <div class="landing-fade-in">
-      <table class="commands-table">
+      <table class="commands-table" role="table">
         <thead>
           <tr>
-            <th>Command</th>
-            <th>What Happens</th>
+            <th scope="col">Command</th>
+            <th scope="col">What Happens</th>
           </tr>
         </thead>
         <tbody>
@@ -192,21 +202,21 @@
   </section>
 
   <!-- The Moat -->
-  <section class="landing-moat landing-fade-in">
+  <section class="landing-moat landing-fade-in" aria-label="Competitive advantage">
     <h2>The Moat</h2>
     <div class="moat-tagline">The CUDA of Consumer Commerce</div>
     <p>NVIDIA built CUDA — the software layer that made GPUs essential. ReturnClaw is building the infrastructure layer that makes returns effortless. The more returns processed, the deeper the retailer policy graph. The deeper the graph, the better the service. That's the flywheel.</p>
   </section>
 
   <!-- CTA to Demo -->
-  <section class="landing-try-it" id="demo-intro">
+  <section class="landing-try-it" id="demo-intro" aria-label="Demo call to action">
     <h2>Try ReturnClaw</h2>
     <p>Click the orb or type a message. No setup required.</p>
-    <a href="#demo" class="btn-primary large">Launch Demo ↓</a>
+    <a href="#demo" class="btn-primary large" aria-label="Launch ReturnClaw demo">Launch Demo ↓</a>
   </section>
 
   <!-- Separator -->
-  <div class="section-separator" id="demo">
+  <div class="section-separator" id="demo" aria-label="Demo section">
     <div class="separator-line"></div>
     <span class="separator-label">LIVE DEMO</span>
     <div class="separator-line"></div>
@@ -219,7 +229,7 @@
   <div id="demo-wrapper">
 
     <!-- Header -->
-    <header class="header">
+    <header class="header" role="banner">
       <div class="header-inner">
         <div class="logo">
           <svg class="logo-icon" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-label="ReturnClaw logo">
@@ -231,20 +241,45 @@
           </svg>
           <span class="logo-text">ReturnClaw</span>
         </div>
-        <button class="header-btn" id="howItWorksBtn">How it Works</button>
+        <div class="header-actions">
+          <button class="header-btn" id="historyToggleBtn" aria-label="Toggle return history panel" title="Return History">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+          <button class="header-btn" id="howItWorksBtn" aria-label="Learn how ReturnClaw works">How it Works</button>
+        </div>
       </div>
     </header>
 
+    <!-- Quick Action Bar -->
+    <nav class="quick-action-bar" id="quickActionBar" role="toolbar" aria-label="Quick actions">
+      <button class="quick-action-btn" data-action="new-return" aria-label="Start a new return">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        <span>New Return</span>
+      </button>
+      <button class="quick-action-btn" data-action="track-return" aria-label="Track an existing return">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Track Return</span>
+      </button>
+      <button class="quick-action-btn" data-action="policy-lookup" aria-label="Look up a retailer return policy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Policy Lookup</span>
+      </button>
+      <button class="quick-action-btn" data-action="return-history" aria-label="View return history">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Return History</span>
+      </button>
+    </nav>
+
     <!-- Main Content -->
-    <main class="main">
+    <main class="main" role="main">
 
       <!-- Orb Area -->
       <div class="orb-area" id="orbArea">
         <div class="orb-container" id="orbContainer">
           <div class="orb-glow" id="orbGlow"></div>
-          <button class="orb" id="orb" aria-label="Click to speak">
+          <button class="orb" id="orb" aria-label="Click to speak or start a return">
             <div class="orb-inner" id="orbInner">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="orb-mic-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="orb-mic-icon" aria-hidden="true">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                 <line x1="12" y1="19" x2="12" y2="23"/>
@@ -252,35 +287,44 @@
               </svg>
             </div>
           </button>
-          <p class="orb-label" id="orbLabel">Click to start a return</p>
+          <p class="orb-label" id="orbLabel">Tap to start your return</p>
+          <div class="orb-ready-badge" id="orbReadyBadge">Ready</div>
         </div>
       </div>
 
       <!-- Pipeline -->
-      <div class="pipeline" id="pipeline">
+      <div class="pipeline" id="pipeline" role="progressbar" aria-label="Return process pipeline">
         <div class="pipeline-step" data-step="triage" id="stepTriage">
-          <div class="pipeline-dot"></div>
+          <div class="pipeline-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
           <span>Triage</span>
         </div>
-        <div class="pipeline-connector"></div>
+        <div class="pipeline-connector"><div class="pipeline-connector-fill"></div></div>
         <div class="pipeline-step" data-step="policy" id="stepPolicy">
-          <div class="pipeline-dot"></div>
+          <div class="pipeline-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          </div>
           <span>Policy</span>
         </div>
-        <div class="pipeline-connector"></div>
+        <div class="pipeline-connector"><div class="pipeline-connector-fill"></div></div>
         <div class="pipeline-step" data-step="execution" id="stepExecution">
-          <div class="pipeline-dot"></div>
+          <div class="pipeline-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
           <span>Execution</span>
         </div>
-        <div class="pipeline-connector"></div>
+        <div class="pipeline-connector"><div class="pipeline-connector-fill"></div></div>
         <div class="pipeline-step" data-step="carrier" id="stepCarrier">
-          <div class="pipeline-dot"></div>
+          <div class="pipeline-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
           <span>Carrier</span>
         </div>
       </div>
 
       <!-- Chat Messages Area -->
-      <div class="chat-area" id="chatArea">
+      <div class="chat-area" id="chatArea" role="log" aria-label="Conversation messages" aria-live="polite">
         <!-- Messages inserted here by JS -->
       </div>
     </main>
@@ -288,9 +332,9 @@
     <!-- Input Bar -->
     <div class="input-bar" id="inputBar">
       <div class="input-bar-inner">
-        <input type="text" class="text-input" id="textInput" placeholder="Type a message..." autocomplete="off" aria-label="Type a message">
+        <input type="text" class="text-input" id="textInput" placeholder="Type a message..." autocomplete="off" aria-label="Type a message to ReturnClaw">
         <button class="send-btn" id="sendBtn" aria-label="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="22" y1="2" x2="11" y2="13"/>
             <polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
@@ -300,7 +344,7 @@
     </div>
 
     <!-- How It Works Modal -->
-    <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="How ReturnClaw Works">
       <div class="modal">
         <div class="modal-header">
           <h2>How ReturnClaw Works</h2>
@@ -346,10 +390,28 @@
       </div>
     </div>
 
+    <!-- Return History Panel -->
+    <aside class="history-panel" id="historyPanel" role="complementary" aria-label="Return history">
+      <div class="history-panel-header">
+        <h3>Return History</h3>
+        <button class="history-close-btn" id="historyCloseBtn" aria-label="Close return history">&times;</button>
+      </div>
+      <div class="history-panel-body" id="historyPanelBody">
+        <div class="history-empty" id="historyEmpty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3; margin-bottom: 12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>No returns yet</p>
+          <span>Complete a return and it will appear here</span>
+        </div>
+        <div class="history-list" id="historyList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </aside>
+
   </div><!-- end #demo-wrapper -->
 
   <!-- Footer -->
-  <footer class="landing-footer">
+  <footer class="landing-footer" role="contentinfo">
     <p>Built by <a href="https://kelleyhunt.law">Kelley Hunt, PLLC</a> — Founded by Aisha Hunt</p>
     <p>Source-Available License | <a href="https://github.com/KelleyHuntPLLC/returnclaw">GitHub</a></p>
     <p style="margin-top: 0.5rem;"><a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a></p>
