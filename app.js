@@ -1381,7 +1381,7 @@ class ReturnClawAgent {
       </div>
       <div class="privacy-note">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        We use OAuth \u2014 your password is never stored or seen by ReturnClaw.
+        Your credentials are secured with app-specific passwords \u2014 never stored by ReturnClaw.
       </div>
     `;
 
@@ -1410,6 +1410,54 @@ class ReturnClawAgent {
     await this.speech.speak(msg);
     this.state = 'awaiting_item';
     this._startListeningAfterDelay();
+  }
+
+  // Demo mode: prompt user for their actual email before simulating connection
+  _showDemoEmailPrompt(provider) {
+    const domainMap = {
+      'Gmail': 'gmail.com', 'Outlook': 'outlook.com', 'Yahoo': 'yahoo.com',
+      'iCloud': 'icloud.com', 'ProtonMail': 'protonmail.com', 'AOL': 'aol.com', 'Other': 'email.com'
+    };
+    const domain = domainMap[provider] || 'email.com';
+
+    const card = document.createElement('div');
+    card.className = 'action-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-status-dot blue"></div>
+        <div class="card-title">Connect ${provider}</div>
+      </div>
+      <div style="padding: 12px 16px; font-size: 13px; color: var(--text-secondary, #888);">
+        Enter your ${provider} email to get started.
+      </div>
+      <div style="padding: 0 16px 12px;">
+        <input type="email" class="card-input" id="demoEmailInput" placeholder="you@${domain}" autocomplete="email" style="width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 10px 12px; border: 1px solid var(--border, #333); border-radius: 8px; background: var(--bg-secondary, #1a1a1a); color: var(--text-primary, #fff); font-size: 14px;">
+      </div>
+      <div style="padding: 0 16px 12px; display: flex; gap: 8px;">
+        <button class="card-input-btn" id="demoEmailSubmit" style="padding: 10px 20px; border-radius: 8px; background: var(--accent, #10b981); color: #fff; border: none; font-weight: 600; cursor: pointer; font-size: 14px;">Connect</button>
+      </div>
+      <div style="padding: 0 16px 12px; font-size: 11px; color: var(--text-tertiary, #666);">
+        🔒 Demo mode — no actual email access. In the live version, we use secure IMAP with app-specific passwords.
+      </div>
+    `;
+    this._addAgentMessageWithCard(`Connect your ${provider} account:`, card);
+
+    setTimeout(() => {
+      const input = document.getElementById('demoEmailInput');
+      const submit = document.getElementById('demoEmailSubmit');
+      if (input) input.focus();
+      const handleSubmit = () => {
+        const val = input?.value.trim();
+        if (val && val.includes('@')) {
+          this._simulateEmailConnect(provider, val);
+        } else if (val) {
+          // If they just typed a name, append the domain
+          this._simulateEmailConnect(provider, val + '@' + domain);
+        }
+      };
+      submit?.addEventListener('click', handleSubmit);
+      input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
+    }, 100);
   }
 
   async _handleUserInput(text) {
@@ -2114,7 +2162,7 @@ class ReturnClawAgent {
       </div>
       <div class="privacy-note">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        We use OAuth — your password is never stored or seen by ReturnClaw.
+        Your credentials are secured with app-specific passwords — never stored by ReturnClaw.
       </div>
     `;
 
@@ -2139,18 +2187,8 @@ class ReturnClawAgent {
       return;
     }
 
-    // DEMO MODE: simulate email connect for all providers
-    const emailMap = {
-      'Gmail': 'john.doe@gmail.com',
-      'Outlook': 'john.doe@outlook.com',
-      'Yahoo': 'john.doe@yahoo.com',
-      'iCloud': 'john.doe@icloud.com',
-      'ProtonMail': 'john.doe@protonmail.com',
-      'AOL': 'john.doe@aol.com',
-      'Other': 'john.doe@email.com'
-    };
-    const email = emailMap[provider] || 'user@email.com';
-    await this._simulateEmailConnect(provider, email);
+    // DEMO MODE: Ask user for their email before simulating connect
+    this._showDemoEmailPrompt(provider);
   }
 
   // ---- IMAP Connect Form ----
@@ -2555,13 +2593,11 @@ class ReturnClawAgent {
   async _handleOrderId(intent, text) {
     this.context.orderId = text.replace(/^#/, '').trim().toUpperCase() || generateOrderId(this.context.retailer);
     this.context.orderDate = getRecentDate();
-    if (!this.context.price) {
-      this.context.price = [29.99, 49.99, 79.99, 99.99, 129.99, 149.99, 199.99, 249.99][Math.floor(Math.random() * 8)];
-    }
 
     await this._showTyping(1000);
 
-    const foundMsg = `Found it — order #${this.context.orderId}. ${this.context.item}, $${this.context.price.toFixed(2)}, ordered ${formatDate(this.context.orderDate)}. Is this correct?`;
+    const priceStr = this.context.price ? `, $${this.context.price.toFixed(2)}` : '';
+    const foundMsg = `Found it — order #${this.context.orderId}. ${this.context.item}${priceStr}, ordered ${formatDate(this.context.orderDate)}. Is this correct?`;
     const orderCard = this._createOrderCard();
     this._addAgentMessageWithCard(foundMsg, orderCard);
     await this.speech.speak(foundMsg);
@@ -2584,7 +2620,7 @@ class ReturnClawAgent {
           <div class="order-thumb">${this.context.emoji}</div>
           <div class="order-info">
             <div class="order-item-name">${this.context.item}</div>
-            <div class="order-meta">${r.name} · $${this.context.price.toFixed(2)}</div>
+            <div class="order-meta">${r.name}${this.context.price ? ' · $' + this.context.price.toFixed(2) : ''}</div>
           </div>
         </div>
         <div class="card-divider"></div>
@@ -2635,7 +2671,7 @@ class ReturnClawAgent {
       <div class="card-btn-group">
         <button class="refund-option" data-refund="original">
           <div class="refund-option-title">💳 Original payment method</div>
-          <div class="refund-option-desc">Visa ending in 4242</div>
+          <div class="refund-option-desc">Back to your original payment method</div>
           <div class="refund-option-time">3–5 business days</div>
         </button>
         <button class="refund-option" data-refund="store_credit">
@@ -2673,7 +2709,7 @@ class ReturnClawAgent {
     this.session.preferredRefundMethod = method; // Remember preference for future returns
 
     const methodNames = {
-      'original': 'original payment method (Visa ending in 4242)',
+      'original': 'original payment method',
       'store_credit': 'store credit (instant)',
       'exchange': 'replacement exchange'
     };
@@ -2899,10 +2935,19 @@ class ReturnClawAgent {
       // Simple address parsing: assume format "123 Main St, Denver, CO 80202"
       const parts = text.split(',').map(p => p.trim());
       let street = parts[0] || text;
-      let city = parts[1] || 'Denver';
-      let stateZip = (parts[2] || 'CO 80202').trim().split(/\s+/);
-      let state = stateZip[0] || 'CO';
-      let zip = stateZip[1] || '80202';
+      let city = parts[1] || '';
+      let stateZip = (parts[2] || '').trim().split(/\s+/);
+      let state = stateZip[0] || '';
+      let zip = stateZip[1] || '';
+
+      // If we couldn't parse a full address, ask for clarification
+      if (!city || !state || !zip) {
+        const msg = "I got the street address. Could you also provide the city, state, and zip code?";
+        this._addAgentMessage(msg);
+        await this.speech.speak(msg);
+        this._startListeningAfterDelay();
+        return;
+      }
 
       const address = { street, apt: '', city, state: state.toUpperCase(), zip };
       await this._confirmAddress(address);
@@ -3212,7 +3257,7 @@ class ReturnClawAgent {
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     const todayStr = formatMonthDay(now);
     const addr = this.session.address;
-    const cityStr = addr ? `${addr.city}, ${addr.state}` : 'Denver, CO';
+    const cityStr = addr ? `${addr.city}, ${addr.state}` : 'Your area';
 
     const refundMethodLabel = this.context.refundMethod === 'store_credit' ? 'Store Credit (Instant)' :
                                this.context.refundMethod === 'exchange' ? 'Replacement Exchange' :
@@ -3723,4 +3768,37 @@ class ReturnClawAgent {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   window.agent = new ReturnClawAgent();
+
+  // Make landing page orb clickable — scrolls to demo and starts conversation
+  const landingOrbContainer = document.getElementById('landingOrbContainer');
+  if (landingOrbContainer) {
+    landingOrbContainer.addEventListener('click', () => {
+      const demoSection = document.getElementById('demo');
+      if (demoSection) {
+        demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      // Start the conversation after scroll completes
+      setTimeout(() => {
+        if (window.agent && window.agent.state === 'idle') {
+          window.agent._handleOrbClick();
+        }
+      }, 600);
+    });
+  }
+
+  // Also make "Try It Now" and "Launch Demo" buttons trigger the agent
+  document.querySelectorAll('a[href="#demo"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const demoSection = document.getElementById('demo');
+      if (demoSection) {
+        demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      setTimeout(() => {
+        if (window.agent && window.agent.state === 'idle') {
+          window.agent._handleOrbClick();
+        }
+      }, 800);
+    });
+  });
 });
