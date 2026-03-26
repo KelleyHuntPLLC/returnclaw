@@ -1,0 +1,21 @@
+{
+  "name": "returnclaw-app",
+  "version": "0.3.0",
+  "description": "Voice-first AI agent for retail returns",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "imapflow": "^1.0.165"
+  },
+  "author": "Kelley Hunt, PLLC <aisha@kelleyhunt.law> (https://kelleyhunt.law)",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
