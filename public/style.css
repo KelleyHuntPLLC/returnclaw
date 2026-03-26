@@ -2274,3 +2274,20 @@ input { font: inherit; color: inherit; }
 .main {
   padding-bottom: 7.5rem;
 }
+
+/* Landing orb clickable enhancement */
+.landing-orb-container {
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+}
+.landing-orb-container:hover .landing-orb-core {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.6), 0 0 80px rgba(16, 185, 129, 0.3);
+}
+.landing-orb-container:hover .landing-orb-ring {
+  animation-duration: 1.5s;
+}
+.landing-orb-container:active .landing-orb-core {
+  transform: scale(0.95);
+}

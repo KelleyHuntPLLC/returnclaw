@@ -1,6 +1,6 @@
 {
   "name": "returnclaw-app",
-  "version": "0.3.0",
+  "version": "0.8.0",
   "description": "Voice-first AI agent for retail returns",
   "main": "server.js",
   "scripts": {

@@ -60,7 +60,7 @@ function getImapConfig(email) {
 // ============================================
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', mode: 'live', version: '0.3.0' });
+  res.json({ status: 'ok', mode: 'live', version: '0.7.0' });
 });
 
 // ============================================
